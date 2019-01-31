@@ -26,7 +26,7 @@ public class Scheduler {
 	public static final String ELEVATOR_BUTTON = "0x20"; 	// elevator button
 	/* ## ------------------------------ ## */
 
-	
+	public static int CURRENT_FLOOR = 0;
 	
 	final int HOSTPORT = 8008;
 	final int EPORT = 3137;
@@ -57,9 +57,8 @@ public class Scheduler {
 	public void run() {
 		System.out.println("main: running.");
 		boolean listening = true;
-		int id = 0;
 		
-		byte[] buffer = new byte[8];
+		byte[] buffer = new byte[12];
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		
 		while (listening) {
@@ -68,8 +67,7 @@ public class Scheduler {
 				System.out.println(String.format("main: received packet ( string >> %s, byte array >> %s ).\n", new String(rPacket.getData()), rPacket.getData()));
 				
 				// handling packet
-				String[] rPacketParsed = parsePacket(rPacket.getData());
-				
+				String[] rPacketParsed = parsePacket(rPacket.getData());				
 				System.out.println(Arrays.toString(rPacketParsed));
 				
 				// CMD
@@ -78,15 +76,17 @@ public class Scheduler {
 					HandleRequest handler = new HandleRequest(EPORT, rPacketParsed);
 					handler.start();
 				}
+				// something else
 				else {
 					System.out.println("main: error");
 				}
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				System.exit(1);
+				listening = false;
 			}			
-		}		
+		}
+		hostSocket.close();
 		return;
 	}
 	
@@ -159,7 +159,7 @@ public class Scheduler {
 
 
 /**
- * Threaded class to handle requests received.
+ * Thread class to handle requests received.
  * 
  * @author Marti
  *
@@ -167,7 +167,7 @@ public class Scheduler {
 class HandleRequest extends Thread {
 	
 	private DatagramSocket eSocket;			// socket to communicate with elevator system
-	private int PORT;						// port of elevator system
+	private int port;						// port of elevator system
 	private String[] request;				// initial request that was sent
 	
 	
@@ -182,7 +182,7 @@ class HandleRequest extends Thread {
 		try {
 			eSocket = new DatagramSocket();
 			this.request = packet;
-			this.PORT = port;
+			this.port = port;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -193,27 +193,41 @@ class HandleRequest extends Thread {
 	
 	@Override
 	public void run() {
-		DatagramPacket fPacket = Scheduler.createPacket(Scheduler.CMD, "frwd", PORT);		
 		
+		boolean running = true;
+		String ins;
 		System.out.println("sub: a new thread is running.");
 		
-		while (true) {		
-			// creating new packet to forward to server
-			System.out.println(String.format("sub: forwarding packet ( string >> %s, byte array >> %s ).", new String(fPacket.getData()), fPacket.getData()));
-			
-			try {					
-				eSocket.send(fPacket);
+		/*
+		 *  determining instruction to send to elevator.
+		 *	FLOOR_BUTTON CMD packet format: '\2\0x10\floor_number\'  
+		 */
+		if (request[1].equals(Scheduler.FLOOR_BUTTON)) {
+			if (Integer.parseInt(request[2]) > Scheduler.CURRENT_FLOOR) {
+				ins = "up";
 			}
-			catch (IOException ioe) {
-				System.out.println("sub: unable to forward packet (IOException), exiting.");
-				System.exit(1);					
+			else if (Integer.parseInt(request[2]) < Scheduler.CURRENT_FLOOR) {
+				ins = "down";
 			}
-			
-
-			
-			
-			
-			return;
+			else {
+				ins = "stay";
+			}
 		}
+		else {
+			ins = "fuck";
+		}
+		
+		DatagramPacket fPacket = Scheduler.createPacket(Scheduler.CMD, ins, port);		
+		System.out.println(String.format("sub: forwarding packet ( string >> %s, byte array >> %s ).", new String(fPacket.getData()), fPacket.getData()));
+		
+		try {					
+			eSocket.send(fPacket);
+		}
+		catch (IOException ioe) {
+			System.out.println("sub: unable to forward packet (IOException), exiting.");
+			//TODO running = false;				
+		}		
+		eSocket.close();
+		return;
 	}	
 } 

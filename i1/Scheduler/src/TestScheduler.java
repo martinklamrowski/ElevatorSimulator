@@ -48,7 +48,7 @@ public class TestScheduler {
 		// sending one of each packet header type
 		while (iterations++ < 3) {
 			System.out.println(iterations);
-			DatagramPacket sendPacket = createPacket(iterations, FLOOR_BUTTON);
+			DatagramPacket sendPacket = createPacket(iterations, FLOOR_BUTTON + "\0" + 3);
 			
 			// sending packet
 			try {
