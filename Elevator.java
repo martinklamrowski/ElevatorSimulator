@@ -17,9 +17,10 @@ public class Elevator implements Runnable {
 	public void run() {
     	while(!_exit)
     	{
-     		if (direction == ElevatorDirection.E_UP && this.currentFloor < 22)
+     		if (direction == ElevatorDirection.E_UP && this.currentFloor < 10)
      		{
      			this.currentFloor += 1;
+				
      			// Send pos
      		}
      		else if ( direction == ElevatorDirection.E_DOWN && this.currentFloor > 1 )
