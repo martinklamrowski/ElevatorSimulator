@@ -25,15 +25,16 @@ public class FloorSubsystem {
 	final int CMD = 2;
 	final int DATA = 3;
 	final int ERROR = 0;
-	
-	final int PORT = 6520;					// port of floor subsystem
+
+	final int FLOORPORT = 6520;					// port of floor subsystem
+	final int SCHEDPORT = 8008;					// port of scheduler
 	
 	int numFloors;
 	int upperFloor;
 	int lowerFloor;
 	
 	int floorMin = 0;
-	int floorTotal = 9;
+	int floorTotal = 10;
 	int elevatorTotal = 1;
 	
 	static ArrayList<Floor> floors;
@@ -44,7 +45,7 @@ public class FloorSubsystem {
 		floors = new ArrayList<Floor>();
 		
         try {
-            sendReceiveSocket = new DatagramSocket();
+            sendReceiveSocket = new DatagramSocket(FLOORPORT);
         } catch (SocketException se) {
             se.printStackTrace();
             System.exit(1);
@@ -72,7 +73,6 @@ public class FloorSubsystem {
 		ArrayList<String> serviceReqList = new ArrayList<String>();
 
 		BufferedReader br = new BufferedReader(new FileReader(filePath));
-		StringBuilder sb = new StringBuilder();
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			Pattern pattern = Pattern.compile("'\\d{2}:\\d{2}:\\d{2}.\\d*\\s\\d{1,2}\\s[A-z]{2,4}\\s\\d{1,2}'");
@@ -82,6 +82,7 @@ public class FloorSubsystem {
 				System.out.println("Got a new service request! " + serviceReqList.get(serviceReqList.size() - 1));
 			}
 		}
+		br.close();
 		for (String s : serviceReqList) {
 			String data[] = s.split(" ");
 			String time[] = data[0].split("[:.]");
@@ -102,15 +103,38 @@ public class FloorSubsystem {
 					System.exit(1);
 				}
 				if (f.getFloorNum() == startFloor) {
-					sendServiceRequest(startFloor, destFloor, targetDirection);
-					if (targetDirection == Direction.UP) f.setUpButtonOn();
-					else if (targetDirection == Direction.DOWN) f.setDownButtonOn();
+					createServiceRequest(startFloor, destFloor, targetDirection);
+					if (targetDirection == Direction.UP) f.setUpLampOn();
+					else if (targetDirection == Direction.DOWN) f.setDownLampOn();
 				}	
 			}
 		}
 
 
 	}
+	
+	public Object[] getInputData(String s) {
+		// Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
+		// parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
+		// direction is in data[5], and destination floor is in data[6]
+		int numParameters = 7;
+		Object[] data = new Object[numParameters];
+		String[] input = s.split(" ");
+		String[] time = input[0].split("[:.]");
+		data[0] = Integer.parseInt(time[0]);
+		data[1] = Integer.parseInt(time[1]);
+		data[2] = Integer.parseInt(time[2]);
+		data[3] = Integer.parseInt(time[3]);
+		data[4] = Integer.parseInt(input[1]);
+		if (input[2].toUpperCase().equals("UP")) data[5] = Direction.UP;
+		else if (input[2].toUpperCase().equals("DOWN")) data[5] = Direction.DOWN;
+		data[6] = Integer.parseInt(input[3]);
+		
+		return data;
+	}
+			
+			
+	
 	public byte[] createPacketData(int packetType, String ins) {
 		// Places string in a byte array for sending
 		
@@ -138,6 +162,7 @@ public class FloorSubsystem {
 	
 	public String[] readPacketData(byte[] msg) {
 		// Converts byte array into string array using default charset.
+		// data[0] is the header, data[1] is the data or command (ex "0x10")
 		String data = new String(msg);
 		String[] str;
 		str = data.replaceFirst("\0", "").split("\0");
@@ -160,19 +185,27 @@ public class FloorSubsystem {
 	}
 
 
-	public void sendServiceRequest(int start, int dest, Direction direction) {
+	public byte[] createServiceRequest(int start, int dest, Direction direction) {
 		
 		byte msg[] = new byte[100];
 		String message = "00:00:00.0 " + start + " " + direction + " " + dest;
 		msg = createPacketData(2, message);
 
-		if (direction == direction.UP) floors.get(start).setUpButtonOn();
-		else if (direction == direction.DOWN) floors.get(start).setUpButtonOn();
+		if (direction == direction.UP) floors.get(start).setUpLampOn();
+		else if (direction == direction.DOWN) floors.get(start).setUpLampOn();
+		
+		System.out.println("Floor Subsystem: Sending elevator request to go from floor " + 
+								start + " to " + dest + ", heading " + direction);
+		 
+		return msg;
+	}	
+	
+	public void send(byte[] msg, int port) {
 		
 		//create a service request message
 		try {
 	        sendPacket = new DatagramPacket(msg, msg.length,
-	                                        InetAddress.getLocalHost(), 6520);
+	                                        InetAddress.getLocalHost(), port);
 	     } catch (UnknownHostException e) {
 	        e.printStackTrace();
 	        System.exit(1);
@@ -186,17 +219,97 @@ public class FloorSubsystem {
 	        e.printStackTrace();
 	        System.exit(1);
 	     }
-		 System.out.println("Floor Subsystem: Sending elevator request to go to floor " + dest + " heading " + direction);
-		
+		 System.out.println("Floor Subsystem: Sending ");
+		 System.out.println(String.format("Floor Subsystem: Sending packet ( string >> %s, byte array >> %s ).", 
+				 new String(sendPacket.getData()), sendPacket.getData()));
+		 
 		
 	}
-	public void listening() {
+/*	
+	public String[] waitForResponse() {
+
+		byte[] buffer = new byte[100];
+		String[] data = new String[2];
+		receivePacket = receive(sendReceiveSocket, buffer);
+		data = readPacketData(buffer);
+		return data;
+		
+	}*/
+	public void ackRequest(String[] msg) {
+
+		byte[] buffer = new byte[100];
+		byte[] response = new byte[100];
+		String[] data = new String[2];
+		String[] acknowledgment = new String[2];
+		if (Integer.parseInt(msg[0]) == ACK) {
+			if (msg[1].equals("0x10")) {
+				System.out.println("Floor Subsystem: Acknowledgment received. Sending input to Scheduler");
+				response = createServiceRequest(1, 6, Direction.UP);
+				send(response, SCHEDPORT);
+				receive(sendReceiveSocket, buffer);
+				data = readPacketData(buffer);
+				acknowledgment = readPacketData(response);
+				if (!data[1].equals(acknowledgment[1])) {
+					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
+					send(createPacketData(CMD,"0x10"), SCHEDPORT);
+					receive(sendReceiveSocket, buffer);
+					data = readPacketData(buffer);
+					ackRequest(data);
+				}
+				else {
+					System.out.println("Floor Subsystem: Data packet acknowledged");
+				}
+			}
+		}
+	}
+	
+	public void cmdRequest(String[] msg) {
+
+		byte[] buffer = new byte[100];
+		byte[] response = new byte[100];
+		String[] data = new String[2];
+		String[] acknowledgment = new String[2];
+		if (Integer.parseInt(msg[0]) == CMD) {
+			if (msg[1].equals("0x11")) {
+				System.out.println("Floor Subsystem: Elevator departure message received. Sending acknowledgment");
+				response = createPacketData(ACK,"0x11");
+				send(response, SCHEDPORT);
+				receive(sendReceiveSocket, buffer);
+				data = readPacketData(buffer);
+				//acknowledgment = readPacketData(response);
+				floors.get(Integer.parseInt(data[0])).setUpLampOff();
+				System.out.println("Floor Subsystem: Floor number received. Sending Acknowledgment");
+				response = createPacketData(ACK,data[1]);
+				send(response, SCHEDPORT);
+			}
+		}
+	}
+	
+	public void running() {
 		boolean listening = true;
 		byte[] buffer = new byte[100];
+		byte[] msg = new byte[100];
+		String[] data = new String[2];
+		msg = createPacketData(CMD, "0x10");
+		send(msg, SCHEDPORT);
+		System.out.println("Floor Subsystem: Waiting for acknowledgment");
+		
+		
 		while (listening) {
-			receivePacket = receive(sendReceiveSocket, buffer);
-			
-			
+			try {
+				receive(sendReceiveSocket, buffer);
+				data = readPacketData(buffer);
+	
+				if (Integer.parseInt(data[0]) == ACK) {
+					ackRequest(data);
+				}
+				if (Integer.parseInt(data[0]) == CMD) {
+					cmdRequest(data);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				listening = false;
+			}
 		}
 	}
 
@@ -205,10 +318,12 @@ public class FloorSubsystem {
 		FloorSubsystem floorSubsystem = new FloorSubsystem();
 		
 		for (int i = 0; i < floorSubsystem.floorTotal; i++) {
-			if (i == floorSubsystem.floorMin) floors.set(i, new Floor(1, i, false, true));
-			else if (i == floorSubsystem.floorTotal - floorSubsystem.floorMin) floors.set(i, new Floor(1, i, true, false));
-			else floors.set(i, new Floor(1, i, false, false));
+			if (i == floorSubsystem.floorMin) floors.add(new Floor(1, i+1, false, true));
+			else if (i == floorSubsystem.floorTotal - floorSubsystem.floorMin) floors.add(new Floor(1, i+1, true, false));
+			else floors.add(new Floor(1, i+1, false, false));
 		}
+		
+		floorSubsystem.running();
 		
 		//floorSubsystem.parseInputFile("test.txt");
 		

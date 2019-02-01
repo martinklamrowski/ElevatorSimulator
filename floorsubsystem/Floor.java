@@ -9,12 +9,11 @@ public class Floor {
 	
 	int floorNum;
 	int numElevators;
-	boolean upButton;
-	boolean downButton;
+	boolean upLamp;
+	boolean downLamp;
 	boolean isUpperFloor;
 	boolean isLowerFloor;
 	
-	Thread arrivalSensor;
 	
 	enum Direction {
 		UP,
@@ -28,14 +27,12 @@ public class Floor {
 	public Floor(int floorNo, int numElev, boolean upper, boolean lower) {
 		floorNum = floorNo;
 		numElevators = numElev;
-		upButton = false;
-		downButton = false;
+		upLamp = false;
+		downLamp = false;
         lampDirection = new Direction[numElev];
 		for (int i = 0; i < numElev; i++) lampDirection[i] = Direction.IDLE;
         
 		
-		arrivalSensor = new Thread(new ArrivalSensor(this));
-		arrivalSensor.start();
         
 		
 	}	
@@ -46,10 +43,10 @@ public class Floor {
 	
 	public Direction getDirection() { return(this.lampDirection[0]); }
 	
-	public void setUpButtonOn() { upButton = true; }
-	public void setDownButtonOn() { downButton = true; }
-	public void setUpButtonOff() { upButton = false; }
-	public void setDownButtonOff() { downButton = false; }
+	public void setUpLampOn() { upLamp = true; }
+	public void setDownLampOn() { downLamp = true; }
+	public void setUpLampOff() { upLamp = false; }
+	public void setDownLampOff() { downLamp = false; }
 	
 	
 }
