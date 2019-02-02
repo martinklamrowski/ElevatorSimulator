@@ -1,105 +1,108 @@
-import java.io.*;
-
-
-
+/**
+ * 
+ * @author ariannashi
+ *
+ */
 public class Elevator implements Runnable {
-	private int currentFloor;
-	private ElevatorDirection direction;
-	public boolean _exit = false;
+	public String currentFloor;
+	public ElevatorDirection direction;
+	//public boolean _exit = false;
+	private static final int MAX_FLOOR = 10;		// maximum floor number
 
-	public Elevator(int currentFloor, ElevatorDirection direction, ElevatorStatus status) {
+	public Elevator(String currentFloor, ElevatorDirection direction) {
 		this.currentFloor = currentFloor;
 		this.direction = direction;
 		
 	}
-	 
+	 	
+	/**
+	 * 
+	 */
 	@Override
 	public void run() {
-    	while(!_exit)
-    	{
-     		if (direction == ElevatorDirection.E_UP && this.currentFloor < 10)
-     		{
-     			this.currentFloor += 1;
-				
-     			// Send pos
-     		}
-     		else if ( direction == ElevatorDirection.E_DOWN && this.currentFloor > 1 )
-     		{
-     			this.currentFloor -= 1;
-     			// send pos
-     		}
-     		else
-     		{
-     			//fuck
-     		}
-     		
-     		try {
-				Thread.sleep(6000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}     		
-     	}   		
+		int pos = 0;
+		try {
+			pos = Integer.parseInt(this.currentFloor);		    			
+		} catch (NumberFormatException e) {
+			System.out.println("ELEVATOR: ERROR current floor");
+		}	
 		
-		return;
+	    if (direction == ElevatorDirection.E_UP && pos < MAX_FLOOR) {
+	    	// wait 6 seconds and move
+		    try {
+		    	Thread.sleep(6000);
+		    } catch (InterruptedException e) {
+		    	e.printStackTrace();
+		    	System.exit(1);
+		    }
+	    	pos += 1;
+	        this.currentFloor = Integer.toString(pos);
+	        // Send pos
+	    } else if (direction == ElevatorDirection.E_DOWN && pos > 1) {
+	    	// wait 6 seconds and move
+		    try {
+		    	Thread.sleep(6000);
+		    } catch (InterruptedException e) {
+		    	e.printStackTrace();
+		    	System.exit(1);
+		    }
+	    	pos -= 1;
+	        this.currentFloor = Integer.toString(pos);
+	        // send pos
+	    } else if ( direction == ElevatorDirection.E_HOLD) {
+	    	this.currentFloor = this.getCurrentFloor();
+	    }else {
+	    	System.out.println("ELEVATOR: ERROR elevator direction");
+	    }
 	}
 
-	/*
+	/**
 	 * return the location of the elevator
+	 * @return
 	 */
-	public int getCurrentFloor() {
+	public String getCurrentFloor() {
 		return this.currentFloor;
 	}
+	
+	public int getIntFloor() {
+		int pos = 0;
+		try {
+			pos = Integer.parseInt(this.currentFloor);
+		} catch (NumberFormatException e) {
+			System.out.println("ELEVATOR: ERROR current floor");
+		}	
+		return pos;
+	}
 
-	/*
-	 * increase current floor by 1
-	 * @see elevatorFactor#moveUp()
-	 */
-	
-	public void moveUp() {
-		
-		currentFloor+=1;
-	}
-	
-	/*
-	 * reduce the current floor by 1
-	 * @see elevatorFactor#moveDown()
-	 */
-	public void moveDown() {
-		currentFloor-=1;
-	}
-	
-	/*
+	/**
 	 * return the current moving direction of elevator
+	 * @return
 	 */
 	public ElevatorDirection getDirection() {
-		/*
-		if (destFloors.size() > 0) {
-			if(currentFloor < destFloors.peek()) {
-				return ElevatorDirection.E_UP;
-			}else if (currentFloor > destFloors.peek()) {
-				return ElevatorDirection.E_DOWN;
-			}
-		}
-		*/
+		
 		return this.direction;
 	}
 	
-	/*
+	/**
 	 * return the current status for the elevator
+	 * @return
 	 */
 	public ElevatorStatus getStatus() {
-		//return (destFloors.size() > 0)?ElevatorStatus.E_IN_USE:ElevatorStatus.E_EMPTY;
 		return (this.getDirection().equals(ElevatorDirection.E_HOLD))?ElevatorStatus.E_EMPTY: ElevatorStatus.E_IN_USE;
 	}
 	
-
+	/**
+	 * return the current status for the elevator
+	 */
 	public void open() {
-		System.out.println("doors are opened");
+		System.out.println("ELEVATOR: Door OPENED at " + this.getCurrentFloor());
 	}
 	
+	/**
+	 * 
+	 */
 	public void close() {
-		System.out.println("doors are closed");
+		System.out.println("ELEVATOR: Door CLOSED at " + this.getCurrentFloor());
 	}
 	
 	
