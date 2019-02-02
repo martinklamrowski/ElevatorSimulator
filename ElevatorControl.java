@@ -150,7 +150,6 @@ public class ElevatorControl {
 				case UP_DROPOFF:
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
@@ -158,6 +157,7 @@ public class ElevatorControl {
 				case UP_PICKUP:																
 					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
+					send = 0;
 					break;		// end UP_PICKUP
 				case DOWN_DROPOFF:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
@@ -170,6 +170,7 @@ public class ElevatorControl {
 				case DOWN_PICKUP:
 					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
+					send = 0;
 					break;		// end DOWN_PICKUP
 				case DOOR_OPEN:	
 					elevator.open();
