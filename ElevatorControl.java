@@ -139,7 +139,7 @@ public class ElevatorControl {
 		    }
 			
 			ins = packetToString(receivePacket.getData());
-			
+						
 			switch (ins[0]) {
 			case CMD:				
 				/*====== CMD packet received ======*/
@@ -151,7 +151,7 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
 					break;		// end UP_DROPOFF				
@@ -159,7 +159,7 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 1;		// elevator job pick up
 					break;		// end UP_PICKUP
@@ -167,7 +167,7 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
@@ -175,7 +175,7 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 1;		// elevator job pick up
 					break;		// end DOWN_PICKUP
@@ -207,7 +207,7 @@ public class ElevatorControl {
 				}// end CMD switch
 				
 				/*--- send ACK for CMD ---**/
-				 sendAPacket= createPacket(ACK, ins[1], aport);
+				 sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
 				try {
 					sendSocket.send(sendAPacket);
 				} catch (IOException e1) {
@@ -231,28 +231,28 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_UP;		// move up
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport); 		// send elevator location
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
 					s_elevator = 1;					
 					break;		// end UP_PICKUP
 				case DOWN_PICKUP:
 					elevator.direction = ElevatorDirection.E_UP;		// move up
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport); 		
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		
 					s_elevator = 1;
 					break;		// end DOWN_PICKUP
 				case UP_DROPOFF:
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;
 					break;		// end UP_DROPOFF
 				case DOWN_DROPOFF:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),aport);
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
 				}// end CMD switch
@@ -280,7 +280,7 @@ public class ElevatorControl {
 					break;
 				}
 				/*--- send ACK message ---*/
-				sendPacket = createPacket(ACK, data[1], aport);
+				sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
 				try {
 					sendSocket.send(sendPacket);
 				} catch (IOException e1) {
@@ -295,18 +295,8 @@ public class ElevatorControl {
 		ElevatorControl cElv = new ElevatorControl();
 		cElv.control();
 
-	}	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-}
+	}// end main	
+}// end class
 
 
 
