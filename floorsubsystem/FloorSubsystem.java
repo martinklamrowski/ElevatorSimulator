@@ -198,7 +198,7 @@ public class FloorSubsystem {
 		else if (direction == direction.DOWN) floors.get(start).setDownLampOn();
 		
 		System.out.println("Floor Subsystem: Sending elevator request to go from floor " + 
-								start + " to " + dest + ", heading " + direction);
+								start + " to " + dest + ", heading " + direction + ". Turning direction lamp on.");
 		 
 		return msg;
 	}	
@@ -257,7 +257,7 @@ public class FloorSubsystem {
 		}
 	}
 	
-	public void cmdRequest(String[] msg) {
+	public void cmdRequest(String[] msg, int tempPort) {
 		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
@@ -266,14 +266,14 @@ public class FloorSubsystem {
 			if (msg[1].equals("0x11")) {
 				System.out.println("Floor Subsystem: Elevator departure message received. Sending acknowledgment");
 				response = createPacketData(ACK,"0x11");
-				send(response, SCHEDPORT);
+				send(response, tempPort);
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				//acknowledgment = readPacketData(response);
 				floors.get(Integer.parseInt(data[1])).setUpLampOff();
-				System.out.println("Floor Subsystem: Floor number received. Sending Acknowledgment");
+				System.out.println("Floor Subsystem: Floor number received. Turning direction lamp off and sending acknowledgment");
 				response = createPacketData(ACK,data[1]);
-				send(response, SCHEDPORT);
+				send(response, tempPort);
 			}
 		}
 	}
@@ -283,20 +283,21 @@ public class FloorSubsystem {
 		byte[] buffer = new byte[100];
 		byte[] msg = new byte[100];
 		String[] data = new String[2];
+		int tempPort = 0;
 		msg = createPacketData(CMD, "0x10");
 		send(msg, SCHEDPORT);
 		System.out.println("Floor Subsystem: Waiting for acknowledgment");
 		
 		while (listening) {
 			try {
-				receive(sendReceiveSocket, buffer);
+				tempPort = receive(sendReceiveSocket, buffer).getPort();
 				data = readPacketData(buffer);
 	
 				if (Integer.parseInt(data[0]) == ACK) {
 					ackRequest(data);
 				}
 				else if (Integer.parseInt(data[0]) == CMD) {
-					cmdRequest(data);
+					cmdRequest(data, tempPort);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
