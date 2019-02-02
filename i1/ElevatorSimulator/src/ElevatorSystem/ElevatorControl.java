@@ -49,7 +49,7 @@ public class ElevatorControl {
 	 * constructor
 	 */
 	public ElevatorControl() {
-		/*--- INITILIZE socket ---*/
+		/*--- INITIALIZE socket ---*/
 		try {
 			sendSocket = new DatagramSocket();
 
