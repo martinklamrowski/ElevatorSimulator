@@ -270,7 +270,7 @@ public class FloorSubsystem {
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				//acknowledgment = readPacketData(response);
-				floors.get(Integer.parseInt(data[0])).setUpLampOff();
+				floors.get(Integer.parseInt(data[1])).setUpLampOff();
 				System.out.println("Floor Subsystem: Floor number received. Sending Acknowledgment");
 				response = createPacketData(ACK,data[1]);
 				send(response, SCHEDPORT);
