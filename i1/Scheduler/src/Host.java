@@ -263,21 +263,18 @@ class Scheduler extends Thread {
 	public void run() {
 		
 		boolean running = true;
-		String ins;
+		String pIns, dIns;
 		String srcFloor, direction, destFloor;
 		String[] parsedData;
 		System.out.println("sub: a new thread is running.");
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} //TODO remove
 		
 				
 		while (running) {
 			
-			String request = upQ.poll();
+			String uq = upQ.poll();
+			String dq = downQ.poll();
+			String request = (dq == null) ? uq : dq;
+			
 			
 			if (request != null) {
 				parsedData = request.split(" ");
@@ -286,36 +283,36 @@ class Scheduler extends Thread {
 				destFloor = parsedData[3];
 				
 				/*
-				 *  determining which way the elevator needs to go to pickup
+				 *  determining which way the elevator needs to go to pickup and dropoff
 				 *	DATA packet format: '\3\"time src_floor direction dest_floor"\'
 				 *	
 				 *	if elevator is below src_floor - need to move elevator up
 				 *	if elevator is above src_floor - need to move elevator down 
-				 */
-				if (direction.equals("UP")) {
-					if (Integer.parseInt(srcFloor) > Host.currentFloor) {
-						ins = Host.UP_PICKUP;
-					}
-					else if (Integer.parseInt(srcFloor) < Host.currentFloor) {
-						ins = Host.DOWN_PICKUP;
-					}
-					else {
-						ins = Host.STOP;	//TODO special case not handled
-					}
+				 *
+				 *	if dest_floor > src_floor - go up after pickup
+				 *	if dest_floor < src_floor - go down after pickup
+				 */				
+				if (Integer.parseInt(srcFloor) > Host.currentFloor) {
+					pIns = Host.UP_PICKUP;					
 				}
-				// down
+				else if (Integer.parseInt(srcFloor) < Host.currentFloor) {
+					pIns = Host.DOWN_PICKUP;
+				}
 				else {
-					if (Integer.parseInt(srcFloor) > Host.currentFloor) {
-						ins = Host.UP_PICKUP;
-					}
-					else if (Integer.parseInt(srcFloor) < Host.currentFloor) {
-						ins = Host.DOWN_PICKUP;
-					}
-					else {
-						ins = Host.STOP;	//TODO special case not handled
-					}
-				}				
-				handleRequest(ins, request);
+					pIns = Host.STOP;	//TODO special case not handled
+				}
+				// drop off direction
+				if (direction.equals("UP")) {
+					dIns = Host.UP_DROPOFF;
+				}
+				else if (direction.equals("DOWN")) {
+					dIns = Host.DOWN_DROPOFF;
+				}
+				else {
+					dIns = Host.STOP;	//TODO special case not handled
+				}
+				performPickup(pIns, request);
+				performDropoff(dIns, request);
 			}
 			else {
 				continue;
@@ -327,11 +324,12 @@ class Scheduler extends Thread {
 	
 	
 	/**
+	 * Method doing the bulk of the socket operations for a pickup.
 	 * 
 	 * @param ins
 	 * @param port
 	 */
-	public void handleRequest(String ins, String request) {
+	public void performPickup(String ins, String request) {
 		
 		String srcFloor, direction, destFloor;
 		String[] parsedData;
@@ -345,7 +343,7 @@ class Scheduler extends Thread {
 		byte[] buffer = new byte[8];
 		DatagramPacket cPacket = Host.createPacket(Host.CMD, ins, eport);
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
-		DatagramPacket dPacket = Host.createPacket(Host.DATA, srcFloor, eport);
+		DatagramPacket dPacket = Host.createPacket(Host.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
@@ -390,8 +388,8 @@ class Scheduler extends Thread {
 					keepMoving = false;
 				}
 				else {
-					System.out.println(String.format("sub: sending continue ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));
 					cPacket = Host.createPacket(Host.ACK, rPacketParsed[1], eport);
+					System.out.println(String.format("sub: sending continue ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
 			}
@@ -431,15 +429,126 @@ class Scheduler extends Thread {
 			// parsing ack
 			aPacketParsed = Host.parsePacket(aPacket.getData());				
 			System.out.println(String.format("sub: received ack - done ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
-			System.out.println(Arrays.toString(aPacketParsed));
-			
-			
+			System.out.println(Arrays.toString(aPacketParsed));			
 		}
 		catch (Exception e) {
 			System.out.println("sub: unable to communicate with elevator system, aborting request.");
 			e.printStackTrace();
 			return;
 		}		
+	}
+	
+	
+	/**
+	 * Method doing the bulk of the socket operations for a dropoff.
+	 * 
+	 * @param ins
+	 * @param request
+	 */
+	public void performDropoff(String ins, String request) {
+		String srcFloor, direction, destFloor;
+		String[] parsedData;
+		boolean keepMoving = true;
+		
+		parsedData = request.split(" ");
+		srcFloor = parsedData[1];
+		direction = parsedData[2];
+		destFloor = parsedData[3];
+		
+		byte[] buffer = new byte[8];
+		DatagramPacket cPacket = Host.createPacket(Host.CMD, ins, eport);
+		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
+		DatagramPacket dPacket = Host.createPacket(Host.DATA, destFloor, eport);
+		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
+		String[] rPacketParsed;
+		
+		System.out.println(String.format("sub: forwarding command packet ( string >> %s, byte array >> %s ).", new String(cPacket.getData()), cPacket.getData()));
+		
+		try {
+			// send cmd
+			eSocket.send(cPacket);
+			
+			// listen for ack
+			eSocket.receive(aPacket);
+			
+			// parsing ack
+			String[] aPacketParsed = Host.parsePacket(aPacket.getData());				
+			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(Arrays.toString(aPacketParsed));
+			/*
+			// send elevator destination
+			System.out.println(String.format("sub: sending elevator button ( string >> %s, byte array >> %s ).", new String(dPacket.getData()), dPacket.getData()));
+			eSocket.send(dPacket);
+			
+			// listen for ack
+			eSocket.receive(aPacket);
+			
+			// parsing ack
+			aPacketParsed = Host.parsePacket(aPacket.getData());				
+			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(Arrays.toString(aPacketParsed));
+			*/
+			// positional updates
+			while (keepMoving) {
+				eSocket.receive(rPacket);
+				
+				rPacketParsed = Host.parsePacket(rPacket.getData());				
+				System.out.println(String.format("sub: received positional update ( string >> %s, byte array >> %s ).", new String(rPacket.getData()), rPacket.getData()));
+				System.out.println(Arrays.toString(rPacketParsed));
+				
+				// if elevator is at required floor then stop
+				if (rPacketParsed[1].equals(destFloor)) {
+					cPacket = Host.createPacket(Host.CMD, Host.STOP, eport);
+					System.out.println(String.format("sub: sending stop ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));
+					keepMoving = false;
+				}
+				else {
+					cPacket = Host.createPacket(Host.ACK, rPacketParsed[1], eport);
+					System.out.println(String.format("sub: sending continue ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));					
+				}				
+				eSocket.send(cPacket);
+			}
+			
+			// listen for ack to stop
+			eSocket.receive(aPacket);
+			
+			// parsing ack
+			aPacketParsed = Host.parsePacket(aPacket.getData());				
+			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(Arrays.toString(aPacketParsed));
+			
+			// sending open door
+			cPacket = Host.createPacket(Host.CMD, Host.DOOR_OPEN, eport);
+			System.out.println(String.format("sub: sending open door ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));
+			eSocket.send(cPacket);
+			
+			// listen for ack to open
+			eSocket.receive(aPacket);
+			
+			// parsing ack
+			aPacketParsed = Host.parsePacket(aPacket.getData());				
+			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(Arrays.toString(aPacketParsed));
+			
+			// sending close door
+			cPacket = Host.createPacket(Host.CMD, Host.DOOR_CLOSE, eport);
+			System.out.println(String.format("sub: sending close door ( string >> %s, byte array >> %s ).\n", new String(cPacket.getData()), cPacket.getData()));
+			eSocket.send(cPacket);
+			
+			// listen for ack to close
+			eSocket.receive(aPacket);
+			
+			// parsing ack
+			aPacketParsed = Host.parsePacket(aPacket.getData());				
+			System.out.println(String.format("sub: received ack - done ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(Arrays.toString(aPacketParsed));			
+		}
+		catch (Exception e) {
+			System.out.println("sub: unable to communicate with elevator system, aborting request.");
+			e.printStackTrace();
+			return;
+		}
+		
 	}
 	
 	
