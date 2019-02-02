@@ -29,6 +29,12 @@ public class FloorSubsystem {
 	final int FLOORPORT = 6520;					// port of floor subsystem
 	final int SCHEDPORT = 8008;					// port of scheduler
 	
+	public enum Direction {
+		UP,
+		DOWN,
+		IDLE
+	}
+	
 	int numFloors;
 	int upperFloor;
 	int lowerFloor;
@@ -36,6 +42,8 @@ public class FloorSubsystem {
 	int floorMin = 0;
 	int floorTotal = 10;
 	int elevatorTotal = 1;
+	
+	int requestCount = 0;
 	
 	static ArrayList<Floor> floors;
 
@@ -52,12 +60,6 @@ public class FloorSubsystem {
         }
 		
 		
-	}
-
-	public enum Direction {
-		UP,
-		DOWN,
-		IDLE
 	}
 	
 	public void parseInputFile(String filePath) throws FileNotFoundException, IOException {
@@ -229,26 +231,30 @@ public class FloorSubsystem {
 		
 	}
 	
-	public void ackRequest(String[] msg) {
+	
+	public void sendServiceRequest(int start, int dest, Direction dir) {
 		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
+		String[] msg = new String[2];
 		String[] data = new String[2];
 		String[] acknowledgment = new String[2];
+		buffer = createPacketData(CMD, "0x10");
+		send(buffer, SCHEDPORT);
+		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment");
+		receive(sendReceiveSocket, buffer).getPort();
+		msg = readPacketData(buffer);
 		if (Integer.parseInt(msg[0]) == ACK) {
 			if (msg[1].equals("0x10")) {
 				System.out.println("Floor Subsystem: Acknowledgment received. Sending input to Scheduler");
-				response = createServiceRequest(1, 6, Direction.UP);
+				response = createServiceRequest(start, dest, dir);
 				send(response, SCHEDPORT);
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				acknowledgment = readPacketData(response);
 				if (!data[1].equals(acknowledgment[1])) {
 					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
-					send(createPacketData(CMD,"0x10"), SCHEDPORT);
-					receive(sendReceiveSocket, buffer);
-					data = readPacketData(buffer);
-					ackRequest(data);
+					sendServiceRequest(start, dest, dir);
 				}
 				else {
 					System.out.println("Floor Subsystem: Data packet acknowledged");
@@ -274,6 +280,10 @@ public class FloorSubsystem {
 				System.out.println("Floor Subsystem: Floor number received. Turning direction lamp off and sending acknowledgment");
 				response = createPacketData(ACK,data[1]);
 				send(response, tempPort);
+				if (requestCount < 2) {
+					
+					requestCount++;
+				}
 			}
 		}
 	}
@@ -281,23 +291,24 @@ public class FloorSubsystem {
 	public void running() {
 		boolean listening = true;
 		byte[] buffer = new byte[100];
-		byte[] msg = new byte[100];
 		String[] data = new String[2];
 		int tempPort = 0;
-		msg = createPacketData(CMD, "0x10");
-		send(msg, SCHEDPORT);
-		System.out.println("Floor Subsystem: Waiting for acknowledgment");
+		
+		// Send service request and wait for acknowledgment before listening begins
+		sendServiceRequest(1, 6, Direction.UP);
+		requestCount++;
 		
 		while (listening) {
 			try {
 				tempPort = receive(sendReceiveSocket, buffer).getPort();
 				data = readPacketData(buffer);
-	
-				if (Integer.parseInt(data[0]) == ACK) {
-					ackRequest(data);
-				}
-				else if (Integer.parseInt(data[0]) == CMD) {
+				if (Integer.parseInt(data[0]) == CMD) {
 					cmdRequest(data, tempPort);
+					if (requestCount < 3) {
+						if (requestCount == 1) sendServiceRequest(1, 9, Direction.UP);
+						if (requestCount == 2) sendServiceRequest(6, 1, Direction.DOWN);
+						requestCount++;
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
