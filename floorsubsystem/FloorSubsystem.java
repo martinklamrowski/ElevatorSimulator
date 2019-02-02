@@ -242,7 +242,7 @@ public class FloorSubsystem {
 		buffer = createPacketData(CMD, "0x10");
 		send(buffer, SCHEDPORT);
 		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment");
-		receive(sendReceiveSocket, buffer).getPort();
+		receive(sendReceiveSocket, buffer);
 		msg = readPacketData(buffer);
 		if (Integer.parseInt(msg[0]) == ACK) {
 			if (msg[1].equals("0x10")) {
@@ -252,13 +252,13 @@ public class FloorSubsystem {
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				acknowledgment = readPacketData(response);
-				if (!data[1].equals(acknowledgment[1])) {
-					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
-					sendServiceRequest(start, dest, dir);
-				}
-				else {
-					System.out.println("Floor Subsystem: Data packet acknowledged");
-				}
+//				if (!data[1].equals(acknowledgment[1])) {
+//					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
+//					sendServiceRequest(start, dest, dir);
+//				}
+//				else {
+					System.out.println("Floor Subsystem: Data packet acknowledged. Scheduler data is: " + data[1]);
+//				}
 			}
 		}
 	}
