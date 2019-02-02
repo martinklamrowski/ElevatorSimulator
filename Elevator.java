@@ -95,6 +95,13 @@ public class Elevator implements Runnable {
 	 * return the current status for the elevator
 	 */
 	public void open() {
+		// wait 2 seconds and open door
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		    	e.printStackTrace();
+		    	System.exit(1);
+		}
 		System.out.println("ELEVATOR: Door OPENED at " + this.getCurrentFloor());
 	}
 	
@@ -102,6 +109,14 @@ public class Elevator implements Runnable {
 	 * 
 	 */
 	public void close() {
+		// wait 2 seconds and close door
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		    	e.printStackTrace();
+		    	System.exit(1);
+		}
+
 		System.out.println("ELEVATOR: Door CLOSED at " + this.getCurrentFloor());
 	}
 	
