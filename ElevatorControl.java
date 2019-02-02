@@ -74,11 +74,13 @@ public class ElevatorControl {
 		String data = "";
 		DatagramPacket packet = null;
 
-		if (packetType == "1") {				// ACK
+		if (packetType.equals("1")) {				// ACK
 			data = "\0" + ACK + "\0" + code + "\0";
-		}else if (packetType == "2") {				//CMD
+		} else if (packetType.equals("2")) {				//CMD
 			data = "\0" + CMD + "\0" + code + "\0";
-		}		
+		} else if (packetType.equals("3")) {				//CMD
+			data = "\0" + DATA + "\0" + code + "\0";
+		} 
 
 		try {			
 			packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), port);
@@ -177,12 +179,12 @@ public class ElevatorControl {
 					send = 0;					
 					if (s_elevator == 1) {
 						/*--- door open for pick up, elevator lamp ON ---*/
-						Lamp[num_lamp] = s_elevator;
-						System.out.println("ELEVATOR: Elevator Lamp ON at" + num_lamp);
+						Lamp[num_lamp-1] = s_elevator;
+						System.out.println("ELEVATOR: Elevator Lamp ON at " + num_lamp);
 					}else if (s_elevator == 0) {
 						/*--- door open for drop off, elevator lamp OFF ---*/
 						Lamp[elevator.getIntFloor()-1] = s_elevator;
-						System.out.println("ELEVATOR: Elevator Lamp OFF at" + num_lamp);
+						System.out.println("ELEVATOR: Elevator Lamp OFF at " + num_lamp);
 					}else {
 						System.out.println("ELEVATOR: ERROR elevator status");
 					}
@@ -200,7 +202,7 @@ public class ElevatorControl {
 				}// end CMD switch
 				
 				/*--- send ACK for CMD ---**/
-				 sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
+				sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
 				try {
 					sendSocket.send(sendAPacket);
 				} catch (IOException e1) {
@@ -276,7 +278,7 @@ public class ElevatorControl {
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(data[1])-1; 	// record elevator lamp
+					num_lamp = toInt(data[1]); 	// record elevator lamp
 					break;
 				}// end CMD switch
 				/*--- send ACK message ---*/
@@ -298,7 +300,7 @@ public class ElevatorControl {
 				}// end if (location update)
 			}//end header switch
 		}//end while (true)
-	}// end control()
+	//}// end control()
 
 	public static void main(String[] args) {
 		ElevatorControl cElv = new ElevatorControl();
