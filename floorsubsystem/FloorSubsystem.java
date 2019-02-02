@@ -59,9 +59,12 @@ public class FloorSubsystem {
 		DOWN,
 		IDLE
 	}
+	
 	public void parseInputFile(String filePath) throws FileNotFoundException, IOException {
 		
-		
+		// Take a flat file and parse lines of text for requests in the following form: 
+		// "XX:XX:XX.XXX X DIRECTION X"
+		// Method is not used for this iteration
 		int hour = 0;
 		int min = 0;
 		int sec = 0;
@@ -189,10 +192,10 @@ public class FloorSubsystem {
 		
 		byte msg[] = new byte[100];
 		String message = "00:00:00.0 " + start + " " + direction + " " + dest;
-		msg = createPacketData(2, message);
+		msg = createPacketData(DATA, message);
 
 		if (direction == direction.UP) floors.get(start).setUpLampOn();
-		else if (direction == direction.DOWN) floors.get(start).setUpLampOn();
+		else if (direction == direction.DOWN) floors.get(start).setDownLampOn();
 		
 		System.out.println("Floor Subsystem: Sending elevator request to go from floor " + 
 								start + " to " + dest + ", heading " + direction);
@@ -225,18 +228,9 @@ public class FloorSubsystem {
 		 
 		
 	}
-/*	
-	public String[] waitForResponse() {
-
-		byte[] buffer = new byte[100];
-		String[] data = new String[2];
-		receivePacket = receive(sendReceiveSocket, buffer);
-		data = readPacketData(buffer);
-		return data;
-		
-	}*/
+	
 	public void ackRequest(String[] msg) {
-
+		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
 		String[] data = new String[2];
@@ -264,11 +258,10 @@ public class FloorSubsystem {
 	}
 	
 	public void cmdRequest(String[] msg) {
-
+		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
 		String[] data = new String[2];
-		String[] acknowledgment = new String[2];
 		if (Integer.parseInt(msg[0]) == CMD) {
 			if (msg[1].equals("0x11")) {
 				System.out.println("Floor Subsystem: Elevator departure message received. Sending acknowledgment");
@@ -294,7 +287,6 @@ public class FloorSubsystem {
 		send(msg, SCHEDPORT);
 		System.out.println("Floor Subsystem: Waiting for acknowledgment");
 		
-		
 		while (listening) {
 			try {
 				receive(sendReceiveSocket, buffer);
@@ -303,7 +295,7 @@ public class FloorSubsystem {
 				if (Integer.parseInt(data[0]) == ACK) {
 					ackRequest(data);
 				}
-				if (Integer.parseInt(data[0]) == CMD) {
+				else if (Integer.parseInt(data[0]) == CMD) {
 					cmdRequest(data);
 				}
 			} catch (Exception e) {
