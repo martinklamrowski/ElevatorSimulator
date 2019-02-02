@@ -131,14 +131,14 @@ public class ElevatorControl {
 		while(true) {
 			try {
 				System.out.println("ELEVATOR: Waiting ..."); // so we know we're waiting
-		        receiveSocket.receive(receivePacket);
-		        System.out.println("ELEVATOR: received " + receivePacket.getData().toString());
-		    } catch (IOException e) {
-		    	System.out.print("ELEVATOR: IO Exception: likely:");
-		        System.out.println("Receive Socket Timed Out.\n" + e);
-		        e.printStackTrace();
-		        System.exit(1);
-		    }
+		        	receiveSocket.receive(receivePacket);
+		        	System.out.println("ELEVATOR: received " + receivePacket.getData().toString());
+		    	} catch (IOException e) {
+		    		System.out.print("ELEVATOR: IO Exception: likely:");
+		        	System.out.println("Receive Socket Timed Out.\n" + e);
+		        	e.printStackTrace();
+		        	System.exit(1);
+		    	}
 			
 			ins = packetToString(receivePacket.getData());
 						
@@ -150,18 +150,21 @@ public class ElevatorControl {
 				switch (cmd[1]) {
 				/*--- cases for different CMD code ---**/
 				case UP_DROPOFF:
+					System.out.println("ELEVATOR: received cmd, UP for drop off");
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
 					break;		// end UP_DROPOFF				
-				case UP_PICKUP:																
+				case UP_PICKUP:	
+					System.out.println("ELEVATOR: received cmd, UP for pick up");
 					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					send = 0;
 					break;		// end UP_PICKUP
 				case DOWN_DROPOFF:
+					System.out.println("ELEVATOR: received cmd, DOWN for drop off");
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
@@ -170,11 +173,13 @@ public class ElevatorControl {
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
 				case DOWN_PICKUP:
+					System.out.println("ELEVATOR: received cmd, UP for drop off");
 					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					send = 0;
 					break;		// end DOWN_PICKUP
 				case DOOR_OPEN:	
+					System.out.println("ELEVATOR: received cmd, OPEN door");
 					elevator.open();
 					send = 0;					
 					if (s_elevator == 1) {
@@ -190,10 +195,12 @@ public class ElevatorControl {
 					}
 					break;		// end DOOR_OPEN				
 				case DOOR_CLOSE:
+					System.out.println("ELEVATOR: received cmd, CLOSE door");
 					elevator.close();
 					send = 0;
 					break;		//end DOOR_CLOSE
 				case STOP:
+					System.out.println("ELEVATOR: received cmd, STOP");
 					elevator.direction = ElevatorDirection.E_HOLD;
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator STOPPED at " + elevator.getCurrentFloor());
@@ -209,6 +216,7 @@ public class ElevatorControl {
 					e1.printStackTrace();
 				    System.exit(1);
 				}
+				
 				/*--- send elevator location ---*/
 				if (send == 1) {
 					try {
@@ -226,28 +234,28 @@ public class ElevatorControl {
 				case UP_PICKUP:
 					elevator.direction = ElevatorDirection.E_UP;		// move up
 					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR:Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
 					s_elevator = 1;					
 					break;		// end UP_PICKUP
 				case DOWN_PICKUP:
-					elevator.direction = ElevatorDirection.E_UP;		// move up
+					elevator.direction = ElevatorDirection.E_DOWN;		// move down
 					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR:Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		
 					s_elevator = 1;
 					break;		// end DOWN_PICKUP
 				case UP_DROPOFF:
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR:Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;
 					break;		// end UP_DROPOFF
 				case DOWN_DROPOFF:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR:Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
@@ -270,13 +278,15 @@ public class ElevatorControl {
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+					System.out.println("ELEVATOR:Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(data[1])-1; 	// record elevator lamp
+					num_lamp = toInt(data[1]); 	// record elevator lamp
 					break;
 				case DOWN_PICKUP:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+					System.out.println("ELEVATOR:Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
 					break;
@@ -296,7 +306,6 @@ public class ElevatorControl {
 					e1.printStackTrace();
 					System.exit(1);
 				}
-				System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
 				}// end if (location update)
 			}//end header switch
 		}//end while (true)
