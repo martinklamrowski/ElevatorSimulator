@@ -156,11 +156,7 @@ public class ElevatorControl {
 					s_elevator = 0;		// elevator job drop off
 					break;		// end UP_DROPOFF				
 				case UP_PICKUP:																
-					elevator.direction = ElevatorDirection.E_UP;	//move up
-					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					send = 1;	// send elevator location
+					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					break;		// end UP_PICKUP
 				case DOWN_DROPOFF:
@@ -172,11 +168,7 @@ public class ElevatorControl {
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
 				case DOWN_PICKUP:
-					elevator.direction = ElevatorDirection.E_DOWN;	//move down
-					elevator.run();
-					System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
-					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					send = 1;	// send elevator location
+					System.out.println("ELEVATOR: wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					break;		// end DOWN_PICKUP
 				case DOOR_OPEN:	
@@ -222,6 +214,7 @@ public class ElevatorControl {
 						e1.printStackTrace();
 						System.exit(1);
 					}
+					send = 0;
 				}// end if (location update)
 				break;		// end CMD			
 			case ACK:
@@ -271,22 +264,37 @@ public class ElevatorControl {
 				data = ins;
 				switch (cmd[1]) {
 				case UP_PICKUP:
+					elevator.direction = ElevatorDirection.E_UP;	//move up
+					elevator.run();
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1])-1; 	// record elevator lamp
-					s_elevator = 1;				
 					break;
 				case DOWN_PICKUP:
+					elevator.direction = ElevatorDirection.E_DOWN;	//move down
+					elevator.run();
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1])-1; 	// record elevator lamp
-					s_elevator = 1;
 					break;
-				}
+				}// end CMD switch
 				/*--- send ACK message ---*/
-				sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
+				sendAPacket = createPacket(ACK, data[1], receivePacket.getPort());
+				try {
+					sendSocket.send(sendAPacket);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				    System.exit(1);
+				}
+				/*--- send elevator location ---*/
 				try {
 					sendSocket.send(sendPacket);
 				} catch (IOException e1) {
 					e1.printStackTrace();
-				    System.exit(1);
-				}				
+					System.exit(1);
+				}
+				System.out.println("ELEVATOR:Elevator at Floor " + elevator.getCurrentFloor());
+				}// end if (location update)
 			}//end header switch
 		}//end while (true)
 	}// end control()
