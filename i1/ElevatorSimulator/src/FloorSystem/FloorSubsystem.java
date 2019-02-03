@@ -3,6 +3,7 @@
 // This class is the FloorSubsystem side for a simple echo server based on
 // UDP/IP. The FloorSubsystem sends a character string to the echo server, then waits 
 // for the server to send it back to the FloorSubsystem.
+// Last edited January 9th, 2016
 package FloorSystem;
 
 
@@ -49,6 +50,7 @@ public class FloorSubsystem {
 	int floorTotal = 10;
 	int elevatorTotal = 1;
 	
+	Direction currentDirection = Direction.IDLE;
 	int requestCount = 0;
 	
 	static ArrayList<Floor> floors;
@@ -324,6 +326,7 @@ public class FloorSubsystem {
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
 		String[] data = new String[2];
+		String direction = "";
 		if (Integer.parseInt(msg[0]) == CMD) {
 			if (msg[1].equals("0x11")) {
 				System.out.println("Floor Subsystem: Elevator departure message received. Sending acknowledgment");
@@ -332,8 +335,15 @@ public class FloorSubsystem {
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				//acknowledgment = readPacketData(response);
-				floors.get(Integer.parseInt(data[1])).setUpLampOff();
-				System.out.printf("Floor Subsystem: Floor number received. Turning direction lamp off for floor %d and sending acknowledgment \n", floors.get(Integer.parseInt(data[1])));
+				if (currentDirection == Direction.UP) {
+					floors.get(Integer.parseInt(data[1])).setUpLampOff();
+					direction = "up";
+				}
+				else if (currentDirection == Direction.DOWN) {
+					floors.get(Integer.parseInt(data[1])).setDownLampOff();
+					direction = "down";
+				}
+				System.out.printf("Floor Subsystem: Floor number received. Turning direction lamp off going %s for floor %d and sending acknowledgment \n", direction, Integer.parseInt(data[1]));
 				response = createPacketData(ACK,data[1]);
 				send(response, tempPort);
 			}
@@ -353,6 +363,7 @@ public class FloorSubsystem {
 		int tempPort = 0;
 		
 		// Send service request and wait for acknowledgment before listening begins
+		currentDirection = Direction.UP;
 		sendServiceRequest(1, 6, Direction.UP);
 		requestCount++;
 		
@@ -363,10 +374,22 @@ public class FloorSubsystem {
 				if (Integer.parseInt(data[0]) == CMD) {
 					cmdRequest(data, tempPort);
 					if (requestCount < 5) {
-						if (requestCount == 1) sendServiceRequest(6, 5, Direction.DOWN);
-						if (requestCount == 2) sendServiceRequest(4, 8, Direction.UP);
-						if (requestCount == 3) sendServiceRequest(1, 5, Direction.UP);
-						if (requestCount == 4) sendServiceRequest(7, 1, Direction.DOWN);
+						if (requestCount == 1) {
+							currentDirection = Direction.DOWN;
+							sendServiceRequest(6, 5, Direction.DOWN);
+						}
+						if (requestCount == 2) {
+							currentDirection = Direction.UP;
+							sendServiceRequest(4, 8, Direction.UP);
+						}
+						if (requestCount == 3) {
+							currentDirection = Direction.UP;
+							sendServiceRequest(1, 5, Direction.UP);
+						}
+						if (requestCount == 4) {
+							currentDirection = Direction.DOWN;
+							sendServiceRequest(7, 1, Direction.DOWN);
+						}
 						requestCount++;
 					}
 				}
