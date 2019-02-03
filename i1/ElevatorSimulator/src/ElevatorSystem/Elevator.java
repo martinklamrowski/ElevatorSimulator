@@ -1,7 +1,7 @@
 package ElevatorSystem;
 
 /**
- * 
+ * this is the class declare the elevator object 
  * @author ariannashi
  *
  */
@@ -18,7 +18,7 @@ public class Elevator implements Runnable {
 	}
 	 	
 	/**
-	 * 
+	 *  function used for thread to make the elevator move and act
 	 */
 	@Override
 	public void run() {
@@ -59,13 +59,17 @@ public class Elevator implements Runnable {
 	}
 
 	/**
-	 * return the location of the elevator
+	 * return the location of the elevator in string
 	 * @return
 	 */
 	public String getCurrentFloor() {
 		return this.currentFloor;
 	}
 	
+	/**
+	* return the location of elevator in integer
+	* @return 
+	*/
 	public int getIntFloor() {
 		int pos = 0;
 		try {
@@ -77,7 +81,10 @@ public class Elevator implements Runnable {
 	}
 
 	/**
-	 * return the current moving direction of elevator
+	 * return the current direction of elevator
+	 * move up: E_UP
+	 * move down: E_DOWN
+	 * stop: E_HOLD
 	 * @return
 	 */
 	public ElevatorDirection getDirection() {
@@ -87,6 +94,8 @@ public class Elevator implements Runnable {
 	
 	/**
 	 * return the current status for the elevator
+	 * elevator acting: E_IN_USE
+	 * elevator is stopping: E_EMPTY
 	 * @return
 	 */
 	public ElevatorStatus getStatus() {
@@ -94,7 +103,7 @@ public class Elevator implements Runnable {
 	}
 	
 	/**
-	 * return the current status for the elevator
+	 * open the door of the elevator
 	 */
 	public void open() {
 		// wait 2 seconds and open door
@@ -108,7 +117,7 @@ public class Elevator implements Runnable {
 	}
 	
 	/**
-	 * 
+	 * close elevator door
 	 */
 	public void close() {
 		// wait 2 seconds and close door
@@ -121,65 +130,6 @@ public class Elevator implements Runnable {
 
 		System.out.println("ELEVATOR: Door CLOSED at " + this.getCurrentFloor());
 	}
-	
-	
-	/*
-	 * remove the arrived destination from the destFloors list
-	 */
-	/*
-	public void removeDestination(int dest) {
-		this.destFloors.remove(dest);
-	}
-	*/
-	
-	/*
-	 * add new destination to the destFloors list in numeric order
-	 */
-	/*
-	public void addDestination(int dest) {
-		for (int i = 0; i < destFloors.size(); i++) {
-			if (this.destFloors.get(i+1) > dest) {
-				this.destFloors.add(i+1,dest);
-			}
-		}
-		
-	}
-	*/
-	
-	
-	/*
-	 * check the next destination of the elevator
-	 */
-	/*
-	public int getNextDestination() {
-		int next_dest = 0;
-		switch (this.getDirection()) {
-		case E_DOWN:
-			for (int i = 0; i < destFloors.size(); i++) {
-				if (this.destFloors.get(i+1) > this.currentFloor) {
-					next_dest = this.destFloors.get(i);
-				}
-			}
-			break;
-
-		case E_UP:
-			for (int i = destFloors.size()-1; i < destFloors.size(); i++) {
-				if (this.destFloors.get(i-1) < this.currentFloor) {
-					next_dest = this.destFloors.get(i);
-				}
-			}
-			break;
-		case E_HOLD:
-			next_dest = -0;
-			break;
-		
-		}
-		return next_dest;
-		
-	}
-	
-	*/
-	
 	
 
 }
