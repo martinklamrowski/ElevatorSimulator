@@ -369,7 +369,7 @@ public class FloorSubsystem {
 					cmdRequest(data, tempPort);
 					if (requestCount < 3) {
 						if (requestCount == 1) sendServiceRequest(2, 9, Direction.UP);
-						if (requestCount == 2) sendServiceRequest(6, 1, Direction.DOWN);
+						if (requestCount == 2) sendServiceRequest(7, 1, Direction.DOWN);
 						requestCount++;
 					}
 				}
