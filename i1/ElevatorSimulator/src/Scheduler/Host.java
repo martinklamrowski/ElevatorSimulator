@@ -6,15 +6,13 @@
 package Scheduler;
 
 import java.net.*;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * 
+ * Class acting as the interface for the FloorSubsystem. Submits new requests to the Scheduler.
  * 
  * @author Marti
- *
  */
 public class Host {
 	
@@ -37,8 +35,7 @@ public class Host {
 
 	public static int currentFloor = 0;
 	BlockingQueue<String> upQ = new ArrayBlockingQueue<String>(100);		// queue with up requests
-	BlockingQueue<String> downQ = new ArrayBlockingQueue<String>(100);		// queue with down requests
-	
+	BlockingQueue<String> downQ = new ArrayBlockingQueue<String>(100);		// queue with down requests	
 	
 	final int HOSTPORT = 8008;
 	final int EPORT = 3137;
@@ -54,7 +51,6 @@ public class Host {
 		
 		try {
 			hostSocket = new DatagramSocket(HOSTPORT);
-			//TODO eSocket = new DatagramSocket();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -64,7 +60,7 @@ public class Host {
 	
 	
 	/**
-	 * Run this shit.
+	 * Main process.
 	 */
 	public void run() {
 		System.out.println("main: running.");
@@ -75,8 +71,7 @@ public class Host {
 		
 		// object performing elevator movement calculations in separate thread
 		Scheduler scheduler = new Scheduler(EPORT, FPORT, upQ, downQ);
-		scheduler.start();
-		
+		scheduler.start();		
 		
 		while (listening) {
 			try {
@@ -89,12 +84,11 @@ public class Host {
 				// CMD
 				if (rPacketParsed[0].equals(CMD)) {					
 					
-					handleFloorCommand(rPacketParsed[1], rPacket.getPort());					
-					
+					handleFloorCommand(rPacketParsed[1], rPacket.getPort());				
 				}
 				// something else
 				else {
-					System.out.println("main: don't know what i got.");
+					System.out.println("main: unknown packet.");
 				}
 			}
 			catch (Exception e) {
@@ -224,7 +218,7 @@ public class Host {
 
 
 /**
- * Thread class to handle requests received.
+ * Thread class to handle elevator movements. Uses a BlockingQueue to monitor new requests.
  * 
  * @author Marti
  *
@@ -239,10 +233,12 @@ class Scheduler extends Thread {
 	
 	
 	/**
-	 * Constructor. Takes a port number and packet.
+	 * Constructor. Takes a port number, packet and an up and down request Queue.
 	 * 
 	 * @param port
 	 * @param packet
+	 * @param upQ
+	 * @param downQ
 	 */
 	public Scheduler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ) {
 		super("request thread");
@@ -260,28 +256,28 @@ class Scheduler extends Thread {
 	}	
 	
 	
+	/**
+	 * Main thread process. Executed on thread start.
+	 */
 	@Override
 	public void run() {
 		
 		boolean running = true;
 		String pIns, dIns;
-		String srcFloor, direction, destFloor;
+		String srcFloor, direction;
 		String[] parsedData;
-		System.out.println("sub: a new thread is running.");
-		
+		System.out.println("sub: a new thread is running.");		
 				
 		while (running) {
 			
 			String uq = upQ.poll();
 			String dq = downQ.poll();
-			String request = (dq == null) ? uq : dq;
-			
+			String request = (dq == null) ? uq : dq;			
 			
 			if (request != null) {
 				parsedData = request.split(" ");
 				srcFloor = parsedData[1];
 				direction = parsedData[2];
-				destFloor = parsedData[3];
 				
 				/*
 				 *  determining which way the elevator needs to go to pickup and dropoff
@@ -328,17 +324,16 @@ class Scheduler extends Thread {
 	 * Method doing the bulk of the socket operations for a pickup.
 	 * 
 	 * @param ins
-	 * @param port
+	 * @param request
 	 */
 	public void performPickup(String ins, String request) {
 		
-		String srcFloor, direction, destFloor;
+		String srcFloor, destFloor;
 		String[] parsedData;
 		boolean keepMoving = true;
 		
 		parsedData = request.split(" ");
 		srcFloor = parsedData[1];
-		direction = parsedData[2];
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
@@ -382,6 +377,7 @@ class Scheduler extends Thread {
 				System.out.println(String.format("sub: received positional update ( string >> %s, byte array >> %s ).", new String(rPacket.getData()), rPacket.getData()));
 				System.out.println(Arrays.toString(rPacketParsed));
 				
+				Host.currentFloor = Integer.parseInt(rPacketParsed[1]);
 				// if elevator is at required floor then stop
 				if (rPacketParsed[1].equals(srcFloor)) {
 					cPacket = Host.createPacket(Host.CMD, Host.STOP, eport);
@@ -447,19 +443,16 @@ class Scheduler extends Thread {
 	 * @param request
 	 */
 	public void performDropoff(String ins, String request) {
-		String srcFloor, direction, destFloor;
+		String destFloor;
 		String[] parsedData;
 		boolean keepMoving = true;
 		
 		parsedData = request.split(" ");
-		srcFloor = parsedData[1];
-		direction = parsedData[2];
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
 		DatagramPacket cPacket = Host.createPacket(Host.CMD, ins, eport);
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
-		DatagramPacket dPacket = Host.createPacket(Host.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
@@ -476,19 +469,7 @@ class Scheduler extends Thread {
 			String[] aPacketParsed = Host.parsePacket(aPacket.getData());				
 			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
 			System.out.println(Arrays.toString(aPacketParsed));
-			/*
-			// send elevator destination
-			System.out.println(String.format("sub: sending elevator button ( string >> %s, byte array >> %s ).", new String(dPacket.getData()), dPacket.getData()));
-			eSocket.send(dPacket);
 			
-			// listen for ack
-			eSocket.receive(aPacket);
-			
-			// parsing ack
-			aPacketParsed = Host.parsePacket(aPacket.getData());				
-			System.out.println(String.format("sub: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
-			System.out.println(Arrays.toString(aPacketParsed));
-			*/
 			// positional updates
 			while (keepMoving) {
 				eSocket.receive(rPacket);
@@ -497,6 +478,7 @@ class Scheduler extends Thread {
 				System.out.println(String.format("sub: received positional update ( string >> %s, byte array >> %s ).", new String(rPacket.getData()), rPacket.getData()));
 				System.out.println(Arrays.toString(rPacketParsed));
 				
+				Host.currentFloor = Integer.parseInt(rPacketParsed[1]);
 				// if elevator is at required floor then stop
 				if (rPacketParsed[1].equals(destFloor)) {
 					cPacket = Host.createPacket(Host.CMD, Host.STOP, eport);
@@ -548,13 +530,12 @@ class Scheduler extends Thread {
 			System.out.println("sub: unable to communicate with elevator system, aborting request.");
 			e.printStackTrace();
 			return;
-		}
-		
+		}		
 	}
 	
 	
 	/**
-	 * Send position to floor.
+	 * Send position to floor system so the lamp can be turned off.
 	 * 
 	 * @param floor
 	 */
