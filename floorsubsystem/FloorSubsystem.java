@@ -368,7 +368,7 @@ public class FloorSubsystem {
 				if (Integer.parseInt(data[0]) == CMD) {
 					cmdRequest(data, tempPort);
 					if (requestCount < 3) {
-						if (requestCount == 1) sendServiceRequest(1, 9, Direction.UP);
+						if (requestCount == 1) sendServiceRequest(2, 9, Direction.UP);
 						if (requestCount == 2) sendServiceRequest(6, 1, Direction.DOWN);
 						requestCount++;
 					}
