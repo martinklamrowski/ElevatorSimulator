@@ -8,7 +8,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 /**
- * 
+ * this is the function where receive request from scheduler and control corresponding elevator to do the request
  * @author ariannashi
  *
  */
@@ -46,14 +46,13 @@ public class ElevatorControl {
 	
 	
 	/**
-	 * constructor
+	 * constructor, initalize socket and elevator lamp
 	 */
 	public ElevatorControl() {
 		/*--- INITIALIZE socket ---*/
 		try {
 			sendSocket = new DatagramSocket();
-
-	        receiveSocket = new DatagramSocket(aport);	        
+	        	receiveSocket = new DatagramSocket(aport);	        
 		} catch (SocketException se) {
 			se.printStackTrace();
 	        System.exit(1);
@@ -66,7 +65,7 @@ public class ElevatorControl {
 	}
 	
 	/**
-	 * function create DatagramPacket using HEADER, CODE, and port
+	 * function create DatagramPacket using packetType: HEADER, code: COMMAND IDENTIFIERS, and port
 	 * @param packetType
 	 * @param code
 	 * @param port
@@ -106,7 +105,7 @@ public class ElevatorControl {
 	}
 	
 	/**
-	 *  function transfer string to int 
+	 *  function transfers string to int 
 	 * @param string
 	 * @return
 	 */
@@ -121,7 +120,7 @@ public class ElevatorControl {
 	}
 		
 	/**
-	 * function control elevator
+	 * function called in main to control corresponding elevator do the received request
 	 */
 	public void control() {
 		byte _data[] = new byte[100];
@@ -311,11 +310,13 @@ public class ElevatorControl {
 					e1.printStackTrace();
 					System.exit(1);
 				}
-				}// end if (location update)
 			}//end header switch
 		}//end while (true)
-	//}// end control()
-
+	}// end control()
+	
+	/**
+	 *  main function of the ElevatorControl class 
+	 */
 	public static void main(String[] args) {
 		ElevatorControl cElv = new ElevatorControl();
 		cElv.control();
