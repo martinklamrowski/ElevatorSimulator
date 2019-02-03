@@ -15,6 +15,13 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 
+ * 
+ * @author Sunjay
+ *
+ */
+
 public class FloorSubsystem {
 
 	DatagramPacket sendPacket;
@@ -61,12 +68,16 @@ public class FloorSubsystem {
 		
 		
 	}
-	
+
+	/**
+	 * Take a flat file and parse lines of text for requests in the following form: 
+	 * "XX:XX:XX.XXX X DIRECTION X"
+	 * Method is not used for this iteration
+	 * @param filePath
+	 * 
+	 */
 	public void parseInputFile(String filePath) throws FileNotFoundException, IOException {
 		
-		// Take a flat file and parse lines of text for requests in the following form: 
-		// "XX:XX:XX.XXX X DIRECTION X"
-		// Method is not used for this iteration
 		int hour = 0;
 		int min = 0;
 		int sec = 0;
@@ -117,11 +128,15 @@ public class FloorSubsystem {
 
 
 	}
-	
+
+	/**
+	 * Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
+	 * parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
+	 * direction is in data[5], and destination floor is in data[6]
+	 * @param s
+	 * @return data
+	 */
 	public Object[] getInputData(String s) {
-		// Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
-		// parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
-		// direction is in data[5], and destination floor is in data[6]
 		int numParameters = 7;
 		Object[] data = new Object[numParameters];
 		String[] input = s.split(" ");
@@ -139,9 +154,14 @@ public class FloorSubsystem {
 	}
 			
 			
-	
+
+	/**
+	 * Places string in a byte array for sending
+	 * 
+	 * @param packetType, ins
+	 * @param byte array of data
+	 */
 	public byte[] createPacketData(int packetType, String ins) {
-		// Places string in a byte array for sending
 		
 		String data;
 		
@@ -164,7 +184,14 @@ public class FloorSubsystem {
 		
 		return data.getBytes();
 	}	
-	
+
+	/**
+	 * Converts byte array into string array using default charset.
+	 * data[0] is the header, data[1] is the data or command (ex "0x10")
+	 * 
+	 * @param msg
+	 * @return str
+	 */
 	public String[] readPacketData(byte[] msg) {
 		// Converts byte array into string array using default charset.
 		// data[0] is the header, data[1] is the data or command (ex "0x10")
@@ -175,7 +202,13 @@ public class FloorSubsystem {
 		return str;
 	}
 	
-	
+
+	/**
+	 * Set a datagram packet and block until message is received
+	 * 
+	 * @param socket, msg
+	 * @return packet
+	 */
 	public DatagramPacket receive(DatagramSocket socket, byte[] msg) {
 		DatagramPacket packet = new DatagramPacket(msg, msg.length);
 
@@ -190,6 +223,12 @@ public class FloorSubsystem {
 	}
 
 
+	/**
+	 * Create a service request to send to the scheduler, setting lamps as necessary
+	 * 
+	 * @param start, dest, direction
+	 * @return msg
+	 */
 	public byte[] createServiceRequest(int start, int dest, Direction direction) {
 		
 		byte msg[] = new byte[100];
@@ -204,7 +243,13 @@ public class FloorSubsystem {
 		 
 		return msg;
 	}	
-	
+
+	/**
+	 * Create and send a message
+	 * 
+	 * @param msg, port
+	 * 
+	 */
 	public void send(byte[] msg, int port) {
 		
 		//create a service request message
@@ -231,7 +276,13 @@ public class FloorSubsystem {
 		
 	}
 	
-	
+
+	/**
+	 * Send a service request containing the start floor, destination floor and target direction
+	 * 
+	 * @param start, dest, dir
+	 * 
+	 */
 	public void sendServiceRequest(int start, int dest, Direction dir) {
 		
 		byte[] buffer = new byte[100];
@@ -262,7 +313,13 @@ public class FloorSubsystem {
 			}
 		}
 	}
-	
+
+	/**
+	 * Respond to an incoming CMD message
+	 * 
+	 * @param msg, tempPort
+	 * 
+	 */
 	public void cmdRequest(String[] msg, int tempPort) {
 		
 		byte[] buffer = new byte[100];
@@ -288,6 +345,12 @@ public class FloorSubsystem {
 		}
 	}
 	
+	/**
+	 * Run the bulk of the subsystem
+	 * 
+	 * @param ins
+	 * @param request
+	 */
 	public void running() {
 		boolean listening = true;
 		byte[] buffer = new byte[100];
