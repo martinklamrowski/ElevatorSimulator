@@ -343,7 +343,7 @@ public class FloorSubsystem {
 					floors.get(Integer.parseInt(data[1])).setDownLampOff();
 					direction = "down";
 				}
-				System.out.printf("Floor Subsystem: Floor number received. Turning direction lamp off going %s for floor %d and sending acknowledgment \n", direction, Integer.parseInt(data[1]));
+				System.out.printf("Floor Subsystem: Floor number received. Turning %s direction lamp off for floor %d and sending acknowledgment \n", direction, Integer.parseInt(data[1]));
 				response = createPacketData(ACK,data[1]);
 				send(response, tempPort);
 			}
