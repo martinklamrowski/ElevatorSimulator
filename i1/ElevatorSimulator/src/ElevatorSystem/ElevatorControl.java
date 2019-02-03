@@ -211,7 +211,6 @@ public class ElevatorControl {
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator STOPPED at " + elevator.getCurrentFloor());
 					send = 0;
-					s_elevator = -1;		// elevator job stop
 					break;		// end STOP
 				}// end CMD switch
 				
