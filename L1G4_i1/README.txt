@@ -15,7 +15,7 @@ _________________________________________
 THE ELEVATORSIMULATOR PROJECT CONSISTS OF: 
 
 	- 3 subsystems/directories located in /ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
-	- there are a total of # .java source files. 
+	- there are a total of 8 .java source files. 
 	- class Diagram and a State Machine Diagram (PDF) located in /ElevatorSimulator/
 	- instructions for how to open and run files. 
 _____
