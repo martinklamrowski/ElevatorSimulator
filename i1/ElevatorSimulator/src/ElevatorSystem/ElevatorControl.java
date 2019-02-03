@@ -183,23 +183,27 @@ public class ElevatorControl {
 				case DOOR_OPEN:	
 					System.out.println("cmd, OPEN door");
 					elevator.open();
-					send = 0;					
-					if (s_elevator == 1) {
-						/*--- door open for pick up, elevator lamp ON ---*/
-						Lamp[num_lamp-1] = s_elevator;
-						System.out.println("ELEVATOR: Elevator Lamp ON at " + num_lamp);
-					}else if (s_elevator == 0) {
-						/*--- door open for drop off, elevator lamp OFF ---*/
-						Lamp[elevator.getIntFloor()-1] = s_elevator;
-						System.out.println("ELEVATOR: Elevator Lamp OFF at " + num_lamp);
-					}else {
-						System.out.println("ELEVATOR: ERROR elevator status");
-					}
+					send = 0;
+					if (s_elevator != -1) {
+						if (s_elevator == 1) {
+							/*--- door open for pick up, elevator lamp ON ---*/
+							Lamp[num_lamp-1] = s_elevator;
+							System.out.println("ELEVATOR: Elevator Lamp ON at " + num_lamp);
+						}else if (s_elevator == 0) {
+							/*--- door open for drop off, elevator lamp OFF ---*/
+							Lamp[elevator.getIntFloor()-1] = s_elevator;
+							System.out.println("ELEVATOR: Elevator Lamp OFF at " + num_lamp);
+						}else {
+							System.out.println("ELEVATOR: ERROR elevator status");
+						}
+						s_elevator = -1;		// elevator job open door
+					}// end if not -1
 					break;		// end DOOR_OPEN				
 				case DOOR_CLOSE:
 					System.out.println("cmd, CLOSE door");
 					elevator.close();
 					send = 0;
+					s_elevator = -1;		// elevator job open close
 					break;		//end DOOR_CLOSE
 				case STOP:
 					System.out.println("cmd, STOP");
@@ -207,6 +211,7 @@ public class ElevatorControl {
 					elevator.run();
 					System.out.println("ELEVATOR:Elevator STOPPED at " + elevator.getCurrentFloor());
 					send = 0;
+					s_elevator = -1;		// elevator job stop
 					break;		// end STOP
 				}// end CMD switch
 				
