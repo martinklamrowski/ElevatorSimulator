@@ -298,6 +298,10 @@ public class ElevatorControl {
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
 					break;
+				case STOP:
+					s_elevator = 1;		// elevator job pick up
+					num_lamp = toInt(data[1]); 	// record elevator lamp
+					break;
 				}// end CMD switch
 				/*--- send ACK message ---*/
 				sendAPacket = createPacket(ACK, data[1], receivePacket.getPort());
