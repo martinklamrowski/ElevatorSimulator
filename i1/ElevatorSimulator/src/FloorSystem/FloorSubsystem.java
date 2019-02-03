@@ -270,7 +270,7 @@ public class FloorSubsystem {
 	        e.printStackTrace();
 	        System.exit(1);
 	     }
-		 System.out.println("Floor Subsystem: Sending ");
+		 //System.out.println("Floor Subsystem: Sending ");
 		 System.out.println(String.format("Floor Subsystem: Sending packet ( string >> %s, byte array >> %s ).", 
 				 new String(sendPacket.getData()), sendPacket.getData()));
 		 
@@ -293,7 +293,7 @@ public class FloorSubsystem {
 		String[] acknowledgment = new String[2];
 		buffer = createPacketData(CMD, "0x10");
 		send(buffer, SCHEDPORT);
-		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment");
+		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment...");
 		receive(sendReceiveSocket, buffer);
 		msg = readPacketData(buffer);
 		if (Integer.parseInt(msg[0]) == ACK) {
@@ -301,6 +301,7 @@ public class FloorSubsystem {
 				System.out.println("Floor Subsystem: Acknowledgment received. Sending input to Scheduler");
 				response = createServiceRequest(start, dest, dir);
 				send(response, SCHEDPORT);
+				System.out.println("Waiting for acknowledgment of data packet...");
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				acknowledgment = readPacketData(response);
@@ -332,6 +333,7 @@ public class FloorSubsystem {
 				System.out.println("Floor Subsystem: Elevator departure message received. Sending acknowledgment");
 				response = createPacketData(ACK,"0x11");
 				send(response, tempPort);
+				System.out.println("Waiting for floor number...");
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				//acknowledgment = readPacketData(response);
