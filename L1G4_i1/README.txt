@@ -12,7 +12,7 @@ TEAM MEMBERS AND ROLES:
 ~ Martin Klamrowski - code for Scheduler 
 ~ Angie Byun - class diagram, state machine diagram, code for Scheduler
 _________________________________________
-THE ELEVATORSIMULATOR PROJECT CONSISTS OF: 
+THE ELEVATOR SIMULATOR PROJECT CONSISTS OF: 
 
 	- 3 subsystems/directories located in /ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
 	- there are a total of 8 .java source files. 
@@ -40,6 +40,7 @@ TESTING:
 	
 	- JUnit testing included for each subsystem
 	- to run all tests run AllTests.java in Eclipse
+	- ensure the JUnit is included in the project build path
 _______________
 ELEVATOR TIMING:
 (data taken from Herzberg)
