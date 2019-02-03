@@ -337,10 +337,6 @@ public class FloorSubsystem {
 				System.out.println("Floor Subsystem: Floor number received. Turning direction lamp off and sending acknowledgment");
 				response = createPacketData(ACK,data[1]);
 				send(response, tempPort);
-				if (requestCount < 2) {
-					
-					requestCount++;
-				}
 			}
 		}
 	}
