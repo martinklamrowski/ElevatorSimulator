@@ -1,10 +1,9 @@
-package FloorSystem;
 
 // FloorSubsystem.java
 // This class is the FloorSubsystem side for a simple echo server based on
 // UDP/IP. The FloorSubsystem sends a character string to the echo server, then waits 
 // for the server to send it back to the FloorSubsystem.
-// Last edited January 9th, 2016
+package FloorSystem;
 
 
 import java.io.*;
@@ -14,6 +13,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+/**
+ * 
+ * 
+ * @author Sunjay
+ *
+ */
 
 public class FloorSubsystem {
 
@@ -29,6 +35,12 @@ public class FloorSubsystem {
 	final int FLOORPORT = 6520;					// port of floor subsystem
 	final int SCHEDPORT = 8008;					// port of scheduler
 	
+	public enum Direction {
+		UP,
+		DOWN,
+		IDLE
+	}
+	
 	int numFloors;
 	int upperFloor;
 	int lowerFloor;
@@ -36,6 +48,8 @@ public class FloorSubsystem {
 	int floorMin = 0;
 	int floorTotal = 10;
 	int elevatorTotal = 1;
+	
+	int requestCount = 0;
 	
 	static ArrayList<Floor> floors;
 
@@ -54,17 +68,15 @@ public class FloorSubsystem {
 		
 	}
 
-	public enum Direction {
-		UP,
-		DOWN,
-		IDLE
-	}
-	
+	/**
+	 * Take a flat file and parse lines of text for requests in the following form: 
+	 * "XX:XX:XX.XXX X DIRECTION X"
+	 * Method is not used for this iteration
+	 * @param filePath
+	 * 
+	 */
 	public void parseInputFile(String filePath) throws FileNotFoundException, IOException {
 		
-		// Take a flat file and parse lines of text for requests in the following form: 
-		// "XX:XX:XX.XXX X DIRECTION X"
-		// Method is not used for this iteration
 		int hour = 0;
 		int min = 0;
 		int sec = 0;
@@ -115,11 +127,15 @@ public class FloorSubsystem {
 
 
 	}
-	
+
+	/**
+	 * Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
+	 * parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
+	 * direction is in data[5], and destination floor is in data[6]
+	 * @param s
+	 * @return data
+	 */
 	public Object[] getInputData(String s) {
-		// Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
-		// parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
-		// direction is in data[5], and destination floor is in data[6]
 		int numParameters = 7;
 		Object[] data = new Object[numParameters];
 		String[] input = s.split(" ");
@@ -137,9 +153,14 @@ public class FloorSubsystem {
 	}
 			
 			
-	
+
+	/**
+	 * Places string in a byte array for sending
+	 * 
+	 * @param packetType, ins
+	 * @param byte array of data
+	 */
 	public byte[] createPacketData(int packetType, String ins) {
-		// Places string in a byte array for sending
 		
 		String data;
 		
@@ -162,7 +183,14 @@ public class FloorSubsystem {
 		
 		return data.getBytes();
 	}	
-	
+
+	/**
+	 * Converts byte array into string array using default charset.
+	 * data[0] is the header, data[1] is the data or command (ex "0x10")
+	 * 
+	 * @param msg
+	 * @return str
+	 */
 	public String[] readPacketData(byte[] msg) {
 		// Converts byte array into string array using default charset.
 		// data[0] is the header, data[1] is the data or command (ex "0x10")
@@ -173,7 +201,13 @@ public class FloorSubsystem {
 		return str;
 	}
 	
-	
+
+	/**
+	 * Set a datagram packet and block until message is received
+	 * 
+	 * @param socket, msg
+	 * @return packet
+	 */
 	public DatagramPacket receive(DatagramSocket socket, byte[] msg) {
 		DatagramPacket packet = new DatagramPacket(msg, msg.length);
 
@@ -188,6 +222,12 @@ public class FloorSubsystem {
 	}
 
 
+	/**
+	 * Create a service request to send to the scheduler, setting lamps as necessary
+	 * 
+	 * @param start, dest, direction
+	 * @return msg
+	 */
 	public byte[] createServiceRequest(int start, int dest, Direction direction) {
 		
 		byte msg[] = new byte[100];
@@ -202,7 +242,13 @@ public class FloorSubsystem {
 		 
 		return msg;
 	}	
-	
+
+	/**
+	 * Create and send a message
+	 * 
+	 * @param msg, port
+	 * 
+	 */
 	public void send(byte[] msg, int port) {
 		
 		//create a service request message
@@ -229,34 +275,50 @@ public class FloorSubsystem {
 		
 	}
 	
-	public void ackRequest(String[] msg) {
+
+	/**
+	 * Send a service request containing the start floor, destination floor and target direction
+	 * 
+	 * @param start, dest, dir
+	 * 
+	 */
+	public void sendServiceRequest(int start, int dest, Direction dir) {
 		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
+		String[] msg = new String[2];
 		String[] data = new String[2];
 		String[] acknowledgment = new String[2];
+		buffer = createPacketData(CMD, "0x10");
+		send(buffer, SCHEDPORT);
+		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment");
+		receive(sendReceiveSocket, buffer);
+		msg = readPacketData(buffer);
 		if (Integer.parseInt(msg[0]) == ACK) {
 			if (msg[1].equals("0x10")) {
 				System.out.println("Floor Subsystem: Acknowledgment received. Sending input to Scheduler");
-				response = createServiceRequest(6, 1, Direction.DOWN);
+				response = createServiceRequest(start, dest, dir);
 				send(response, SCHEDPORT);
 				receive(sendReceiveSocket, buffer);
 				data = readPacketData(buffer);
 				acknowledgment = readPacketData(response);
-				if (!data[1].equals(acknowledgment[1])) {
-					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
-					send(createPacketData(CMD,"0x10"), SCHEDPORT);
-					receive(sendReceiveSocket, buffer);
-					data = readPacketData(buffer);
-					ackRequest(data);
-				}
-				else {
-					System.out.println("Floor Subsystem: Data packet acknowledged");
-				}
+//				if (!data[1].equals(acknowledgment[1])) {
+//					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
+//					sendServiceRequest(start, dest, dir);
+//				}
+//				else {
+					System.out.println("Floor Subsystem: Data packet acknowledged. Scheduler data is: " + data[1]);
+//				}
 			}
 		}
 	}
-	
+
+	/**
+	 * Respond to an incoming CMD message
+	 * 
+	 * @param msg, tempPort
+	 * 
+	 */
 	public void cmdRequest(String[] msg, int tempPort) {
 		
 		byte[] buffer = new byte[100];
@@ -271,40 +333,42 @@ public class FloorSubsystem {
 				data = readPacketData(buffer);
 				//acknowledgment = readPacketData(response);
 				floors.get(Integer.parseInt(data[1])).setUpLampOff();
-				System.out.println("Floor Subsystem: Floor number received. Turning direction lamp off and sending acknowledgment");
+				System.out.printf("Floor Subsystem: Floor number received. Turning direction lamp off for floor %d and sending acknowledgment \n", floors.get(Integer.parseInt(data[1])));
 				response = createPacketData(ACK,data[1]);
 				send(response, tempPort);
 			}
 		}
 	}
 	
+	/**
+	 * Run the bulk of the subsystem
+	 * 
+	 * @param ins
+	 * @param request
+	 */
 	public void running() {
-		
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		boolean listening = true;
 		byte[] buffer = new byte[100];
-		byte[] msg = new byte[100];
 		String[] data = new String[2];
 		int tempPort = 0;
-		msg = createPacketData(CMD, "0x10");
-		send(msg, SCHEDPORT);
-		System.out.println("Floor Subsystem: Waiting for acknowledgment");
+		
+		// Send service request and wait for acknowledgment before listening begins
+		sendServiceRequest(1, 6, Direction.UP);
+		requestCount++;
 		
 		while (listening) {
 			try {
 				tempPort = receive(sendReceiveSocket, buffer).getPort();
 				data = readPacketData(buffer);
-	
-				if (Integer.parseInt(data[0]) == ACK) {
-					ackRequest(data);
-				}
-				else if (Integer.parseInt(data[0]) == CMD) {
+				if (Integer.parseInt(data[0]) == CMD) {
 					cmdRequest(data, tempPort);
+					if (requestCount < 5) {
+						if (requestCount == 1) sendServiceRequest(6, 5, Direction.DOWN);
+						if (requestCount == 2) sendServiceRequest(4, 8, Direction.UP);
+						if (requestCount == 3) sendServiceRequest(1, 5, Direction.UP);
+						if (requestCount == 4) sendServiceRequest(7, 1, Direction.DOWN);
+						requestCount++;
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
