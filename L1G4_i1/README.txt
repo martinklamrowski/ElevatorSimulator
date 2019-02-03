@@ -38,7 +38,8 @@ note: the FloorSubsystem provides the requests immediately on so ensure the Host
 _______
 TESTING:
 	
-	- JUnit testing included for each subsystem 
+	- JUnit testing included for each subsystem
+	- to run all tests run AllTests.java in Eclipse
 _______________
 ELEVATOR TIMING:
 (data taken from Herzberg)
