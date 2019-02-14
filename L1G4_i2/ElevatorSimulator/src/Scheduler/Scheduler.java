@@ -42,9 +42,8 @@ public class Scheduler {
 	/* ## ------------ ## */
 	
 	/* ## ELEVATOR SYSTEM CONSTITUENTS ## */
-	public static final int numberOfElevators = 4;								// system is made with 4 elevators
-	public static final int topFloor = 22;										// floors are 1-22
-	public static final int bottomFloor = 1;										// floors are 1-22
+	public static final int TOPFLOOR = 22;									// floors are 1-22
+	public static final int BOTTOMFLOOR = 1;								// floors are 1-22
 	BlockingQueue<String> upQ1 = new ArrayBlockingQueue<String>(100);		// queue with up requests (elevator 1)
 	BlockingQueue<String> downQ1 = new ArrayBlockingQueue<String>(100);		// queue with down requests (elevator 1)
 	BlockingQueue<String> upQ2 = new ArrayBlockingQueue<String>(100);		// queue with up requests (elevator 2)
@@ -54,9 +53,16 @@ public class Scheduler {
 	BlockingQueue<String> upQ4 = new ArrayBlockingQueue<String>(100);		// queue with up requests (elevator 4)
 	BlockingQueue<String> downQ4 = new ArrayBlockingQueue<String>(100);		// queue with down requests (elevator 4)
 	
+	public volatile int e1CurrentFloor = 1;									// variable for current floor of elevator to be modified by ElevatorHandler thread
+	public volatile int e2CurrentFloor = 1;									// variable for current floor of elevator to be modified by ElevatorHandler thread 
+	public volatile int e3CurrentFloor = 10;								// variable for current floor of elevator to be modified by ElevatorHandler thread
+	public volatile int e4CurrentFloor = 20;								// variable for current floor of elevator to be modified by ElevatorHandler thread
 	
+	public volatile String e1CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
+	public volatile String e2CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
+	public volatile String e3CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
+	public volatile String e4CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
 	/* ## ---------------------------- ## */
-	
 	
 	
 	/**
@@ -85,10 +91,10 @@ public class Scheduler {
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);			// received packet
 		
 		// object performing elevator movement calculations for each elevator in separate thread
-		ElevatorHandler handler1 = new ElevatorHandler(EPORT, FPORT, upQ1, downQ1, 1);
-		ElevatorHandler handler2 = new ElevatorHandler(EPORT, FPORT, upQ2, downQ2, 1);
-		ElevatorHandler handler3 = new ElevatorHandler(EPORT, FPORT, upQ3, downQ3, 10);
-		ElevatorHandler handler4 = new ElevatorHandler(EPORT, FPORT, upQ4, downQ4, 20);
+		ElevatorHandler handler1 = new ElevatorHandler(EPORT, FPORT, upQ1, downQ1, 1, 1);
+		ElevatorHandler handler2 = new ElevatorHandler(EPORT, FPORT, upQ2, downQ2, 1, 2);
+		ElevatorHandler handler3 = new ElevatorHandler(EPORT, FPORT, upQ3, downQ3, 10, 3);
+		ElevatorHandler handler4 = new ElevatorHandler(EPORT, FPORT, upQ4, downQ4, 20, 4);
 		handler1.start();
 		handler2.start();
 		handler3.start();
@@ -235,8 +241,8 @@ public class Scheduler {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Scheduler host = new Scheduler();
-		host.run();
+		Scheduler scheduler = new Scheduler();
+		scheduler.run();
 	}
 }
 
@@ -251,13 +257,14 @@ public class Scheduler {
  */
 class ElevatorHandler extends Thread {
 	
-	private int currentFloor;
 	private DatagramSocket eSocket;				// socket to communicate with elevator system
 	private int eport;							// port of elevator system
 	private int fport;							// port of floor system
 	private BlockingQueue<String> upQ;			// queue with up requests
 	private BlockingQueue<String> downQ;		// queue with down requests
 	
+	private int currentFloor;
+	private int id;
 	
 	/**
 	 * Constructor. Takes a port number, packet and an up and down request Queue.
@@ -267,15 +274,16 @@ class ElevatorHandler extends Thread {
 	 * @param upQ
 	 * @param downQ
 	 */
-	public ElevatorHandler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ, int currentFloor) {
+	public ElevatorHandler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ, int currentFloor, int id) {
 		super("request thread");
 		try {
 			eSocket = new DatagramSocket();
-			this.upQ = upQ;
-			this.downQ = downQ;
 			this.eport = eport;
 			this.fport = fport;
+			this.upQ = upQ;
+			this.downQ = downQ;
 			this.currentFloor = currentFloor;
+			this.id = id;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -365,7 +373,7 @@ class ElevatorHandler extends Thread {
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport);
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins  + String.format(" %s", this.id), eport); //TODO make this less fugly
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
@@ -479,7 +487,7 @@ class ElevatorHandler extends Thread {
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport);
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins  + String.format(" %s", this.id), eport); //TODO make this less fugly
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
