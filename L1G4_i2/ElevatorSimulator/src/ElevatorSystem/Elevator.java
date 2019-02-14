@@ -1,3 +1,4 @@
+package ElevatorSystem;
 /**
  * this is the class declare the elevator object 
  * @author Arianna SHI
@@ -29,7 +30,7 @@ public class Elevator implements Runnable {
 	public void run() {
 		int pos = 0;
 		try {
-			pos = Integer.parseInt(this.currentFloor);		    			
+			pos = this.getIntFloor();		    			
 		} catch (NumberFormatException e) {
 			System.out.println("ELEVATOR: ERROR current floor");
 		}	
