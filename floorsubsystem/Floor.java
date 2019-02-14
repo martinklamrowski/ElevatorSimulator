@@ -1,16 +1,9 @@
-package floorsubsystem;
+package FloorSystem;
 
 import java.io.*;
 import java.net.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-/**
- * 
- * 
- * @author Sunjay
- *
- */
 
 public class Floor {
 	
@@ -31,7 +24,7 @@ public class Floor {
 	Direction[] lampDirection;
 	
 	
-	public Floor(int floorNo, int numElev, boolean upper, boolean lower) {
+	public Floor(int numElev, int floorNo, boolean upper, boolean lower) {
 		floorNum = floorNo;
 		numElevators = numElev;
 		upLamp = false;
