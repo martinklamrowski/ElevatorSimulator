@@ -1,4 +1,3 @@
-package ElevatorSystem;
 /**
  * this is the class declare the elevator object 
  * @author Arianna SHI
