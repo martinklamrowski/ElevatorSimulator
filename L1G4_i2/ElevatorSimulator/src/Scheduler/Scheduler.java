@@ -616,4 +616,119 @@ class ElevatorHandler extends Thread {
 			e.printStackTrace();
 		}		
 	}
+	
+	/*
+	 * Takes an array of integers, and rearranges them by minimum difference to target integer x.
+	 * @param arr[], n, x
+	 */
+	public void sortByMinDifference(int arr[], int n, int x)
+	{
+		try 
+		{
+			for (int i = 1; i < n; i++)
+			{
+			int difference = Math.abs(arr[i] - x);
+			int j = i - 1;
+			
+			
+				if ((Math.abs(arr[j]) - x) > difference) 
+				{
+					int temp = arr[i];
+				
+					while (j >= 0 && Math.abs(arr[j] - x) > difference) 
+					{
+						arr[j + 1] = arr[j];
+						j--;
+					}
+					arr[j + 1] = temp;
+				}
+			}
+		}
+		catch (Exception e) 
+		{ 
+			e.printStackTrace(); 
+		}
+	}
+	
+	/*
+	 * Check direction of lowest difference of elevator floors
+	 * @param elevator
+	 */
+	public void checkDirectionMinDiff(int elevatorTotal, String fdir, String edir, int efloor)
+	{
+		int initial = 0;
+		int requestBeingHandled = 0;
+		
+		
+		// if tbe direction of floor, elevator is equal to UP and elevator floor is greater than the initial number 
+		if (fdir.equals("UP") && edir.equals("UP") && (efloor > initial)) // the last part????
+		{
+			if (elevatorTotal == 0) // if there are no more elevators
+			{
+				try 
+				{
+					wait();
+					System.out.println("Waiting...");
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+			}
+			else { // go to the closest elevator
+				//where the fuck is the closest elevator
+			}
+		}
+		
+		// if tbe direction of floor, elevator is equal to DOWN and elevator floor is less than the initial number 
+		else if (fdir.equals("DOWN") && edir.equals("DOWN") && (efloor < initial)) 
+		{
+			if (elevatorTotal == 0)
+			{
+				try 
+				{
+					wait();
+					System.out.println("Waiting...");
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+			}
+			else {
+				//go to closest elevator
+			}
+		}
+		else if (requestBeingHandled >= 3) // how many requests are being handled?
+		{
+			if (elevatorTotal == 0)
+			{
+				try 
+				{
+					wait();
+					System.out.println("Waiting...");
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+			}
+			else {
+				//go to closest elevator
+			}
+		}
+		else {
+			// send that elevator 
+		}
+	}
+
+	
 } 
+
+
+
+
+
+
+
+
