@@ -618,54 +618,53 @@ class ElevatorHandler extends Thread {
 		}		
 	}
 	
-	/*
-	 * Takes an array of integers, and rearranges them by minimum difference to target integer x.
-	 * @param n - number of floors, d - distance from requested floor
+	/**
+	 * Calculates the suitability by measuring the distance.
 	 * 
+	 * @param n - number of floors
+	 * @param currentFloor - current floor
+	 * @param requestedFloor - requested floor
+	 * @param currentElevatorDir - current direction of elevator
+	 * @param requestedDir - requested direction
+	 * @return calculated
 	 */
-	public int calculateSuitability(int n, int currentFloor, int requestedFloor, String currentElevatorDir, String requestedDir)
-	{
+	public int calculateSuitability(int n, int currentFloor, int requestedFloor, String currentElevatorDir, String requestedDir) {
+		
 		int calculated = 0;
 		int distance = currentFloor - requestedFloor; // if -ive, call is above, if +ive, call is down
 		
-		if (currentElevatorDir.equals("IDLE"))
-		{
+		// current direction of elevator is IDLE
+		if (currentElevatorDir.equals("IDLE")) {
 			distance = Math.abs(distance);
 			calculated = n + 1 - distance;
 		}
-		else if (currentElevatorDir.equals("DOWN"))
-		{
-			if (distance < 0)
-			{
+		// current direction of elevator is DOWN
+		else if (currentElevatorDir.equals("DOWN")) {
+			if (distance < 0) {
 				calculated = 1;
 			}
-			else if (distance > 0 && requestedDir.equals(currentElevatorDir))
-			{
+			else if (distance > 0 && requestedDir.equals(currentElevatorDir)) {
 				calculated = n + 2 - distance;
 			}
-			else if (distance > 0 && !requestedDir.equals(currentElevatorDir))
-			{
+			else if (distance > 0 && !requestedDir.equals(currentElevatorDir)) {
 				calculated = n + 1 - distance;
 			}
 		}
-		else if (currentElevatorDir.equals("UP"))
-		{
-			if (distance > 0)
-			{
+		// current direction of elevator is UP
+		else if (currentElevatorDir.equals("UP")) {
+			if (distance > 0) {
 				calculated = 1;
 			}
-			else if (distance < 0 && requestedDir.equals(currentElevatorDir))
-			{
+			else if (distance < 0 && requestedDir.equals(currentElevatorDir)) {
 				distance = Math.abs(distance);
 				calculated = n + 2 - distance;
 			}
-			else if (distance < 0 && !requestedDir.equals(currentElevatorDir))
-			{
+			else if (distance < 0 && !requestedDir.equals(currentElevatorDir)) {
 				distance = Math.abs(distance);
 				calculated = n + 1 - distance;
 			}
 		}
-		return calculated;
+		return calculated; // return calculated suitability
 	}// end calculateSuitability
 } // KEEP
 
