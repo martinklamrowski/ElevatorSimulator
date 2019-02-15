@@ -52,7 +52,7 @@ public class Scheduler {
 	BlockingQueue<String> downQ3 = new ArrayBlockingQueue<String>(100);		// queue with down requests (elevator 3)
 	BlockingQueue<String> upQ4 = new ArrayBlockingQueue<String>(100);		// queue with up requests (elevator 4)
 	BlockingQueue<String> downQ4 = new ArrayBlockingQueue<String>(100);		// queue with down requests (elevator 4)
-	
+	/*
 	public volatile int e1CurrentFloor = 1;									// variable for current floor of elevator to be modified by ElevatorHandler thread
 	public volatile int e2CurrentFloor = 1;									// variable for current floor of elevator to be modified by ElevatorHandler thread 
 	public volatile int e3CurrentFloor = 10;								// variable for current floor of elevator to be modified by ElevatorHandler thread
@@ -62,6 +62,7 @@ public class Scheduler {
 	public volatile String e2CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
 	public volatile String e3CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
 	public volatile String e4CurrentDir = "IDLE";								// variable for current direction of elevator to be modified by ElevatorHandler thread
+	/*
 	/* ## ---------------------------- ## */
 	
 	
@@ -91,10 +92,10 @@ public class Scheduler {
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);			// received packet
 		
 		// object performing elevator movement calculations for each elevator in separate thread
-		ElevatorHandler handler1 = new ElevatorHandler(EPORT, FPORT, upQ1, downQ1, 1, 1);
-		ElevatorHandler handler2 = new ElevatorHandler(EPORT, FPORT, upQ2, downQ2, 1, 2);
-		ElevatorHandler handler3 = new ElevatorHandler(EPORT, FPORT, upQ3, downQ3, 10, 3);
-		ElevatorHandler handler4 = new ElevatorHandler(EPORT, FPORT, upQ4, downQ4, 20, 4);
+		ElevatorHandler handler1 = new ElevatorHandler(EPORT, FPORT, upQ1, downQ1, 1, "IDLE", 1);
+		ElevatorHandler handler2 = new ElevatorHandler(EPORT, FPORT, upQ2, downQ2, 1, "IDLE", 2);
+		ElevatorHandler handler3 = new ElevatorHandler(EPORT, FPORT, upQ3, downQ3, 10, "IDLE", 3);
+		ElevatorHandler handler4 = new ElevatorHandler(EPORT, FPORT, upQ4, downQ4, 20, "IDLE", 4);
 		handler1.start();
 		handler2.start();
 		handler3.start();
@@ -163,7 +164,7 @@ public class Scheduler {
 					
 					/* ###################################################### */
 					/* MAIN ELEVATOR SCHEDULING ALGORITHM //TODO */
-					/* ###################################################### */				
+					/* ###################################################### */
 					
 					String[] temp = dPacketParsed[1].split(" ");
 					if (temp[2].equals("UP")) {
@@ -263,8 +264,10 @@ class ElevatorHandler extends Thread {
 	private BlockingQueue<String> upQ;			// queue with up requests
 	private BlockingQueue<String> downQ;		// queue with down requests
 	
-	private int currentFloor;
+	public volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by main thread as well
+	public volatile String currentDirection;	// variable representing current direction of the elevator, to be accessed by main thread as well
 	private int id;
+	
 	
 	/**
 	 * Constructor. Takes a port number, packet and an up and down request Queue.
@@ -274,7 +277,7 @@ class ElevatorHandler extends Thread {
 	 * @param upQ
 	 * @param downQ
 	 */
-	public ElevatorHandler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ, int currentFloor, int id) {
+	public ElevatorHandler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ, int currentFloor, String currentDirection, int id) {
 		super("request thread");
 		try {
 			eSocket = new DatagramSocket();
@@ -283,6 +286,7 @@ class ElevatorHandler extends Thread {
 			this.upQ = upQ;
 			this.downQ = downQ;
 			this.currentFloor = currentFloor;
+			this.currentDirection = currentDirection;
 			this.id = id;
 		}
 		catch (Exception e) {
@@ -326,28 +330,34 @@ class ElevatorHandler extends Thread {
 				 *	if dest_floor < src_floor - go down after pickup
 				 */				
 				if (Integer.parseInt(srcFloor) > currentFloor) {
-					pIns = Scheduler.UP_PICKUP;					
+					pIns = Scheduler.UP_PICKUP;
+					currentDirection = "UP";
 				}
 				else if (Integer.parseInt(srcFloor) < currentFloor) {
 					pIns = Scheduler.DOWN_PICKUP;
+					currentDirection = "DOWN";
 				}
 				else {
 					pIns = Scheduler.STOP;	//TODO special case not handled
 				}
+				performPickup(pIns, request);
+				
 				// drop off direction
 				if (direction.equals("UP")) {
 					dIns = Scheduler.UP_DROPOFF;
+					currentDirection = "UP";
 				}
 				else if (direction.equals("DOWN")) {
 					dIns = Scheduler.DOWN_DROPOFF;
+					currentDirection = "DOWN";
 				}
 				else {
 					dIns = Scheduler.STOP;	//TODO special case not handled
 				}
-				performPickup(pIns, request);
 				performDropoff(dIns, request);
 			}
 			else {
+				currentDirection = "IDLE";
 				continue;
 			}
 		}			
@@ -413,7 +423,7 @@ class ElevatorHandler extends Thread {
 				System.out.println(String.format("sub: received positional update ( string >> %s, byte array >> %s ).", new String(rPacket.getData()), rPacket.getData()));
 				System.out.println(Arrays.toString(rPacketParsed));
 				
-				currentFloor = Integer.parseInt(rPacketParsed[1]);
+				currentFloor = Integer.parseInt(rPacketParsed[1]);				
 				// if elevator is at required floor then stop
 				if (rPacketParsed[1].equals(srcFloor)) {
 					cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.STOP, eport);
@@ -616,119 +626,4 @@ class ElevatorHandler extends Thread {
 			e.printStackTrace();
 		}		
 	}
-	
-	/*
-	 * Takes an array of integers, and rearranges them by minimum difference to target integer x.
-	 * @param arr[], n, x
-	 */
-	public void sortByMinDifference(int arr[], int n, int x)
-	{
-		try 
-		{
-			for (int i = 1; i < n; i++)
-			{
-			int difference = Math.abs(arr[i] - x);
-			int j = i - 1;
-			
-			
-				if ((Math.abs(arr[j]) - x) > difference) 
-				{
-					int temp = arr[i];
-				
-					while (j >= 0 && Math.abs(arr[j] - x) > difference) 
-					{
-						arr[j + 1] = arr[j];
-						j--;
-					}
-					arr[j + 1] = temp;
-				}
-			}
-		}
-		catch (Exception e) 
-		{ 
-			e.printStackTrace(); 
-		}
-	}
-	
-	/*
-	 * Check direction of lowest difference of elevator floors
-	 * @param elevator
-	 */
-	public void checkDirectionMinDiff(int elevatorTotal, String fdir, String edir, int efloor)
-	{
-		int initial = 0;
-		int requestBeingHandled = 0;
-		
-		
-		// if tbe direction of floor, elevator is equal to UP and elevator floor is greater than the initial number 
-		if (fdir.equals("UP") && edir.equals("UP") && (efloor > initial)) // the last part????
-		{
-			if (elevatorTotal == 0) // if there are no more elevators
-			{
-				try 
-				{
-					wait();
-					System.out.println("Waiting...");
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
-			else { // go to the closest elevator
-				//where the fuck is the closest elevator
-			}
-		}
-		
-		// if tbe direction of floor, elevator is equal to DOWN and elevator floor is less than the initial number 
-		else if (fdir.equals("DOWN") && edir.equals("DOWN") && (efloor < initial)) 
-		{
-			if (elevatorTotal == 0)
-			{
-				try 
-				{
-					wait();
-					System.out.println("Waiting...");
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
-			else {
-				//go to closest elevator
-			}
-		}
-		else if (requestBeingHandled >= 3) // how many requests are being handled?
-		{
-			if (elevatorTotal == 0)
-			{
-				try 
-				{
-					wait();
-					System.out.println("Waiting...");
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
-			else {
-				//go to closest elevator
-			}
-		}
-		else {
-			// send that elevator 
-		}
-	}
-
-	
-} 
-
-
-
-
-
-
-
-
+}
