@@ -475,7 +475,7 @@ class ElevatorHandler extends Thread {
 		
 		String srcFloor, destFloor;
 		String[] parsedData;
-		boolean keepMoving = true; // if the elevator is already there no need for positional updates//TODO
+		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates//TODO (ins.equals(Scheduler.STOP) ? false : true)
 		
 		parsedData = request.split(" ");
 		srcFloor = parsedData[1];
@@ -590,7 +590,7 @@ class ElevatorHandler extends Thread {
 	public void performDropoff(String ins, String request) {
 		String destFloor;
 		String[] parsedData;
-		boolean keepMoving = true; // if the elevator is already there no need for positional updates//TODO
+		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates//TODO (ins.equals(Scheduler.STOP) ? false : true)
 		
 		parsedData = request.split(" ");
 		destFloor = parsedData[3];
@@ -672,7 +672,7 @@ class ElevatorHandler extends Thread {
 			System.out.println(Arrays.toString(aPacketParsed));			
 		}
 		catch (Exception e) {
-			System.out.println("sub: unable to communicate with elevator system, aborting request.");
+			System.out.println(String.format("sub-%d: unable to communicate with elevator system, aborting request.", this.id));
 			e.printStackTrace();
 			return;
 		}		
