@@ -48,8 +48,9 @@ public class ElevatorControl {
 	/**
 	 * constructor, initalize socket and elevator lamp
 	 */
-	public ElevatorControl(int port, int num_elevator) {
+	public ElevatorControl(int port, int num_elevator, String floor) {
 		this.num_elevator = num_elevator;
+		Elevator elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
 		/*--- INITIALIZE socket ---*/
 		try {
 			sendSocket = new DatagramSocket();
@@ -341,10 +342,10 @@ public class ElevatorControl {
 	 *  main function of the ElevatorControl class 
 	 */
 	public static void main(String[] args) {
-		ElevatorControl Elv_1 = new ElevatorControl(3137, 1);
-		ElevatorControl Elv_2 = new ElevatorControl(3237, 2);
-		ElevatorControl Elv_3 = new ElevatorControl(3337, 3);
-		ElevatorControl Elv_4 = new ElevatorControl(3437, 4);
+		ElevatorControl Elv_1 = new ElevatorControl(3137, 1, "1");
+		ElevatorControl Elv_2 = new ElevatorControl(3237, 2. "1");
+		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
+		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
 		Elv_1.control();
 		Elv_2.control();
 		Elv_3.control();
