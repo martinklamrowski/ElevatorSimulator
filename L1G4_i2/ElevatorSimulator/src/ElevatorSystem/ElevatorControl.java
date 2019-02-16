@@ -7,6 +7,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
 
 /**
  * this is the function where receive request from scheduler and control corresponding elevator to do the request
@@ -36,10 +37,11 @@ public class ElevatorControl extends Thread{
 	private static int num_lamp = 0;
 	private static int send = 0;
 	private static int s_elevator = 0;		//elevator status	1: pickup, lamp ON		0:drop off, lamp OFF
-	int[] Lamp = new int[MAX_FLOOR];
 	private DatagramSocket sendSocket, receiveSocket;
 	private DatagramPacket sendPacket, receivePacket, sendAPacket;
-	
+
+	int[] Lamp = new int[MAX_FLOOR];
+	LinkedList<Integer> lampList = new LinkedList<Integer>();
 	
 	//private static final int MAX_ELEVATORS = 0;
 	//private int num_of_elevator;
@@ -65,10 +67,6 @@ public class ElevatorControl extends Thread{
 		for(int i =0; i<MAX_FLOOR; i++) {
 			Lamp[i] = 0;
 		}
-	}
-	
-	public void run() {
-		control();
 	}
 	
 	/**
@@ -195,20 +193,26 @@ public class ElevatorControl extends Thread{
 					System.out.println("cmd, OPEN door");
 					elevator.open(num_elevator);
 					send = 0;
-					if (s_elevator != -1) {
+					//if (s_elevator != -1) {
+					if (lampList.contains(elevator.getIntFloor())) {	// current floor in the drop off list
+						Lamp[elevator.getIntFloor()-1] = s_elevator; 	// lamp off 
+						lampList.remove(elevator.getIntFloor());
+					}
+/*
 						if (s_elevator == 1) {
-							/*--- door open for pick up, elevator lamp ON ---*/
+							/*--- door open for pick up, elevator lamp ON ---
 							Lamp[num_lamp-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
 						}else if (s_elevator == 0) {
-							/*--- door open for drop off, elevator lamp OFF ---*/
+							/*--- door open for drop off, elevator lamp OFF ---
 							Lamp[elevator.getIntFloor()-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
 						}else {
 							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
 						}
 						s_elevator = -1;		// elevator job open door
-					}// end if not -1
+*/
+					//}// end if not -1
 					break;		// end DOOR_OPEN				
 
 				case DOOR_CLOSE:
@@ -307,6 +311,9 @@ public class ElevatorControl extends Thread{
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					lampList.add(num_lamp);
+					Lamp[num_lamp-1] = 1;
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
 					break;
 
 				case DOWN_PICKUP:
@@ -316,24 +323,30 @@ public class ElevatorControl extends Thread{
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					lampList.add(num_lamp);
+					Lamp[num_lamp-1] = 1;
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
 					break;
 
 				case STOP:
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					lampList.add(num_lamp);
+					Lamp[num_lamp-1] = 1;
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
 					if (num_lamp > (elevator.getIntFloor())) {
 						elevator.direction = ElevatorDirection.E_UP;	//move up
 						elevator.run();
 						sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 						System.out.println("ELEVATOR " + num_elevator + ":Elevator moved up, now at Floor " + elevator.getCurrentFloor());
-						s_elevator = 0;		// elevator job drop off
+						s_elevator = 1;		// elevator job pick up
 						cmd[1] = UP_DROPOFF;
 					}else if (num_lamp < (elevator.getIntFloor())) {
 						elevator.direction = ElevatorDirection.E_DOWN;	//move down
 						elevator.run();
 						System.out.println("ELEVATOR " + num_elevator + ":Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
 						sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-						s_elevator = 0;		// elevator job drop off
+						s_elevator = 1;		// elevator job pick up
 						cmd[1] = DOWN_DROPOFF;
 					}// end if elevator direction
 					break;				}// end CMD switch
@@ -371,5 +384,13 @@ public class ElevatorControl extends Thread{
 		Elv_4.start();
 
 	}// end main	
+	
+	/**
+	 * thread function 
+	 */
+	public void run() {
+		control();
+	}
+	
 
 }// end class
