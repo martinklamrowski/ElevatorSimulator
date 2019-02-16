@@ -482,9 +482,9 @@ class ElevatorHandler extends Thread {
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins  + String.format(" %s", this.id), eport); //TODO make this less fugly
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport); //TODO make this less fugly
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
-		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor + String.format(" %s", this.id), eport);
+		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
@@ -525,12 +525,12 @@ class ElevatorHandler extends Thread {
 				currentFloor = Integer.parseInt(rPacketParsed[1]);
 				// if elevator is at required floor then stop
 				if (rPacketParsed[1].equals(srcFloor)) {
-					cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.STOP + String.format(" %s", this.id), eport);
+					cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.STOP, eport);
 					System.out.println(String.format("sub-%d: sending stop ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 					keepMoving = false;
 				}
 				else {
-					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1] + String.format(" %s", this.id), eport);
+					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1], eport);
 					System.out.println(String.format("sub-%d: sending continue ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
@@ -548,7 +548,7 @@ class ElevatorHandler extends Thread {
 			sendPositionToFloor(srcFloor);
 			
 			// sending open door
-			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN + String.format(" %s", this.id), eport);
+			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN, eport);
 			System.out.println(String.format("sub-%d: sending open door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 			eSocket.send(cPacket);
 			
@@ -561,7 +561,7 @@ class ElevatorHandler extends Thread {
 			System.out.println(Arrays.toString(aPacketParsed));
 			
 			// sending close door
-			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_CLOSE + String.format(" %s", this.id), eport);
+			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_CLOSE, eport);
 			System.out.println(String.format("sub-%d: sending close door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 			eSocket.send(cPacket);
 			
@@ -596,7 +596,7 @@ class ElevatorHandler extends Thread {
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins  + String.format(" %s", this.id), eport); //TODO make this less fugly
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport); //TODO make this less fugly
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
@@ -626,12 +626,12 @@ class ElevatorHandler extends Thread {
 				currentFloor = Integer.parseInt(rPacketParsed[1]);
 				// if elevator is at required floor then stop
 				if (rPacketParsed[1].equals(destFloor)) {
-					cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.STOP + String.format(" %s", this.id), eport);
+					cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.STOP, eport);
 					System.out.println(String.format("sub-%d: sending stop ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 					keepMoving = false;
 				}
 				else {
-					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1] + String.format(" %s", this.id), eport);
+					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1], eport);
 					System.out.println(String.format("sub-%d: sending continue ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
@@ -646,7 +646,7 @@ class ElevatorHandler extends Thread {
 			System.out.println(Arrays.toString(aPacketParsed));
 			
 			// sending open door
-			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN + String.format(" %s", this.id), eport);
+			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN, eport);
 			System.out.println(String.format("sub-%d: sending open door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 			eSocket.send(cPacket);
 			
@@ -659,7 +659,7 @@ class ElevatorHandler extends Thread {
 			System.out.println(Arrays.toString(aPacketParsed));
 			
 			// sending close door
-			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_CLOSE + String.format(" %s", this.id), eport);
+			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_CLOSE, eport);
 			System.out.println(String.format("sub-%d: sending close door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 			eSocket.send(cPacket);
 			
