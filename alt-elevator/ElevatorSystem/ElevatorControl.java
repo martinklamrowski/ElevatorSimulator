@@ -359,6 +359,17 @@ public class ElevatorControl {
 	 *  main function of the ElevatorControl class 
 	 */
 	public static void main(String[] args) {
+//		ElevatorControl Elv_1 = new ElevatorControl(3137, 1, "1");
+//		ElevatorControl Elv_2 = new ElevatorControl(3237, 2, "1");
+//		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
+//		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
+//		Elv_1.control();
+//		Elv_2.control();
+//		Elv_3.control();
+//		Elv_4.control();
+//		Elevator elevator2 = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl);
+//		Elevator elevator3 = new Elevator("10", ElevatorDirection.E_HOLD, elevatorControl);
+//		Elevator elevator4 = new Elevator("20", ElevatorDirection.E_HOLD, elevatorControl);
 		ElevatorControl elevatorControl = new ElevatorControl(elevators);
 		elevators = new Elevator[4];
 		elevators[0] = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl, 1);
@@ -366,6 +377,12 @@ public class ElevatorControl {
 		elevators[2] = new Elevator("10", ElevatorDirection.E_HOLD, elevatorControl, 3);
 		elevators[3] = new Elevator("20", ElevatorDirection.E_HOLD, elevatorControl, 4);
 		elevatorControl.control();
+//			{ elevator1 = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl),
+//						elevator2, elevator3, elevator4 };
+//		elevator1.run();
+//		elevator2.run();
+//		elevator3.run();
+//		elevator4.run();
 
 	}// end main	
 }// end class
