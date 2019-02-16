@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
  * @author ariannashi
  *
  */
-public class ElevatorControl {
+public class ElevatorControl extends Thread{
 	/* ## HEADER AND COMMAND IDENTIFIERS ## */
 	private static final String ACK = "1";
 	private static final String CMD = "2";
@@ -28,11 +28,10 @@ public class ElevatorControl {
 	private static final String STOP = "0x3C";
 	
 	/* ## CONSTANT VARIABLE IDENTIFIES ## */
-	//private static final int aport = 3137;
 	private static final int MAX_FLOOR = 22;
 	
 	/*	variable identifies	 */
-	private static int num_elevator = 0; 
+	private int num_elevator = 0; 
 	private static int num_lamp = 0;
 	private static int send = 0;
 	private static int s_elevator = 0;		//elevator status	1: pickup, lamp ON		0:drop off, lamp OFF
@@ -43,7 +42,7 @@ public class ElevatorControl {
 	
 	//private static final int MAX_ELEVATORS = 0;
 	//private int num_of_elevator;
-	private Elevator elevator = new Elevator("0", ElevatorDirection.E_HOLD);
+	private Elevator elevator;
 	
 	
 	/**
@@ -51,7 +50,7 @@ public class ElevatorControl {
 	 */
 	public ElevatorControl(int port, int num_elevator, String floor) {
 		this.num_elevator = num_elevator;
-		Elevator elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
+		elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
 		/*--- INITIALIZE socket ---*/
 		try {
 			sendSocket = new DatagramSocket();
@@ -65,6 +64,10 @@ public class ElevatorControl {
 		for(int i =0; i<MAX_FLOOR; i++) {
 			Lamp[i] = 0;
 		}
+	}
+	
+	public void run() {
+		control();
 	}
 	
 	/**
@@ -89,7 +92,7 @@ public class ElevatorControl {
 		try {			
 			packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), port);
 		}catch (UnknownHostException uhe) {	
-			System.out.println("ELEVATOR " + num_elevator + ": unable to create packet (UnknownHostException), exiting.");
+			System.out.println("ELEVATOR: unable to create packet (UnknownHostException), exiting.");
 			System.exit(1);
 		}
 
@@ -317,23 +320,6 @@ public class ElevatorControl {
 				case STOP:
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
-/*
-						if (num_lamp > (elevator.getIntFloor())) {
-							elevator.direction = ElevatorDirection.E_UP;	//move up
-							elevator.run();
-							sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-							System.out.println("ELEVATOR " + num_elevator + ":Elevator moved up, now at Floor " + elevator.getCurrentFloor());
-							s_elevator = 0;		// elevator job drop off
-							cmd[1] = UP_DROPOFF;
-						}else if (num_lamp < (elevator.getIntFloor())) {
-							elevator.direction = ElevatorDirection.E_DOWN;	//move down
-							elevator.run();
-							System.out.println("ELEVATOR " + num_elevator + ":Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
-							sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-							s_elevator = 0;		// elevator job drop off
-							cmd[1] = DOWN_DROPOFF;
-						}// end if elevator direction
-*/
 					break;				}// end CMD switch
 					
 				/*--- send ACK message ---*/
@@ -363,10 +349,10 @@ public class ElevatorControl {
 		ElevatorControl Elv_2 = new ElevatorControl(3237, 2, "1");
 		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
 		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
-		Elv_1.control();
-		Elv_2.control();
-		Elv_3.control();
-		Elv_4.control();
+		Elv_1.start();
+		Elv_2.start();
+		Elv_3.start();
+		Elv_4.start();
 
 	}// end main	
 
