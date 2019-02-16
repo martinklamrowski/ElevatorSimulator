@@ -36,7 +36,6 @@ public class FloorSubsystem {
 	final int ERROR = 0;
 
 	final int FLOORPORT = 6520;					// port of floor subsystem
-	final int REQUESTPORT = 6521;					// port of floor subsystem
 	final int SCHEDPORT = 8008;					// port of scheduler
 	
 	public enum Direction {
@@ -50,8 +49,8 @@ public class FloorSubsystem {
 	int lowerFloor;
 	
 	int floorMin = 0;
-	int floorTotal = 10;
-	int elevatorTotal = 1;
+	int floorTotal = 22;
+	int elevatorTotal = 4;
 	
 	Direction currentDirection = Direction.IDLE;
 	int requestCount = 0;
@@ -145,10 +144,10 @@ public class FloorSubsystem {
 	 * @param start, dest, direction
 	 * @return msg
 	 */
-	public byte[] createServiceRequest(int start, int dest, Direction direction) {
+	public byte[] createServiceRequest(String time, int start, int dest, Direction direction) {
 		
 		byte msg[] = new byte[100];
-		String message = "00:00:00.0 " + start + " " + direction + " " + dest;
+		String message = time + " " + start + " " + direction + " " + dest;
 		msg = createPacketData(DATA, message);
 
 		if (direction == direction.UP) floors.get(start).setUpLampOn();
@@ -199,7 +198,7 @@ public class FloorSubsystem {
 	 * @param start, dest, dir
 	 * 
 	 */
-	public void sendServiceRequest(int start, int dest, Direction dir, DatagramSocket socket) {
+	public void sendServiceRequest(String time, int start, int dest, Direction dir, DatagramSocket socket) {
 		
 		byte[] buffer = new byte[100];
 		byte[] response = new byte[100];
@@ -214,7 +213,7 @@ public class FloorSubsystem {
 		if (Integer.parseInt(msg[0]) == ACK) {
 			if (msg[1].equals("0x10")) {
 				System.out.println("Floor Subsystem: CMD acknowledgment received. Sending input to Scheduler");
-				response = createServiceRequest(start, dest, dir);
+				response = createServiceRequest(time, start, dest, dir);
 				send(response, SCHEDPORT, socket);
 //				System.out.println(readPacketData(response)[0]);
 //				System.out.println(readPacketData(response)[1]);
@@ -296,7 +295,6 @@ public class FloorSubsystem {
 			}
 		}
 	}	
-	
 
 
 	public static void main(String args[]) throws IOException {

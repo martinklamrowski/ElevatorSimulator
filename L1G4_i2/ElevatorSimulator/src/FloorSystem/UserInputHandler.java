@@ -22,7 +22,7 @@ public class UserInputHandler implements Runnable {
 	public UserInputHandler(FloorSubsystem floorSubsystem) {
 		fs = floorSubsystem;
         try {
-        	requestSocket = new DatagramSocket(fs.REQUESTPORT);
+        	requestSocket = new DatagramSocket();
         } catch (SocketException se) {
             se.printStackTrace();
             System.exit(1);
@@ -97,7 +97,7 @@ public class UserInputHandler implements Runnable {
 //			scheduler and turn the floor's direction lamp on
 			for (Floor f : fs.floors) {
 				if (f.getFloorNum() == startFloor) {
-					fs.sendServiceRequest(startFloor, destFloor, targetDirection, requestSocket);
+					fs.sendServiceRequest(data[0], startFloor, destFloor, targetDirection, requestSocket);
 					if (targetDirection == Direction.UP) f.setUpLampOn();
 					else if (targetDirection == Direction.DOWN) f.setDownLampOn();
 				}	
