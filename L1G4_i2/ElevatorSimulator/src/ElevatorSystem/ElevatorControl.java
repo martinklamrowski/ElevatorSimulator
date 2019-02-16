@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
  * @author ariannashi
  *
  */
-public class ElevatorControl {
+public class ElevatorControl extends Thread{
 	/* ## HEADER AND COMMAND IDENTIFIERS ## */
 	private static final String ACK = "1";
 	private static final String CMD = "2";
@@ -65,6 +65,10 @@ public class ElevatorControl {
 		for(int i =0; i<MAX_FLOOR; i++) {
 			Lamp[i] = 0;
 		}
+	}
+	
+	public void run() {
+		control();
 	}
 	
 	/**
@@ -361,10 +365,10 @@ public class ElevatorControl {
 		ElevatorControl Elv_2 = new ElevatorControl(3237, 2, "1");
 		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
 		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
-		Elv_1.control();
-		Elv_2.control();
-		Elv_3.control();
-		Elv_4.control();
+		Elv_1.start();
+		Elv_2.start();
+		Elv_3.start();
+		Elv_4.start();
 
 	}// end main	
 
