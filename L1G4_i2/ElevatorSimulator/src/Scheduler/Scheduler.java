@@ -222,7 +222,7 @@ public class Scheduler {
 	
 	
 	/**
-	 * Calculates the suitability based on the distance and direction.
+	 * Calculates the suitability of an elevator to service a request based on its distance and direction.
 	 * 
 	 * @param n - number of floors
 	 * @param currentFloor - current floor
@@ -346,14 +346,15 @@ public class Scheduler {
  */
 class ElevatorHandler extends Thread {
 	
-	private DatagramSocket eSocket;				// socket to communicate with elevator system
-	private int eport;							// port of elevator system
-	private int fport;							// port of floor system
-	private BlockingQueue<String> upQ;			// queue with up requests
-	private BlockingQueue<String> downQ;		// queue with down requests
+	private DatagramSocket eSocket;					// socket to communicate with elevator system
+	private int eport;								// port of elevator system
+	private int fport;								// port of floor system
+	private BlockingQueue<String> upQ;				// queue with up requests
+	private BlockingQueue<String> downQ;			// queue with down requests
 	
-	protected volatile String currentDirection;	// variable representing current direction of the elevator, to be accessed by the main thread as well
+	protected volatile String currentDirection;		// variable representing current direction of the elevator, to be accessed by the main thread as well
 	protected volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by the main thread as well
+	protected volatile int currentDestination;		// variable representing the last stop in the current request sequence
 	protected int id;
 	
 	
@@ -473,7 +474,7 @@ class ElevatorHandler extends Thread {
 		byte[] buffer = new byte[8];
 		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins  + String.format(" %s", this.id), eport); //TODO make this less fugly
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
-		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor, eport);
+		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor + String.format(" %s", this.id), eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
@@ -519,7 +520,7 @@ class ElevatorHandler extends Thread {
 					keepMoving = false;
 				}
 				else {
-					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1], eport);
+					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1] + String.format(" %s", this.id), eport);
 					System.out.println(String.format("sub-%d: sending continue ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
@@ -533,13 +534,13 @@ class ElevatorHandler extends Thread {
 			System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 			System.out.println(Arrays.toString(aPacketParsed));			
 			
+			// send update to floor that the elevator has arrived
+			sendPositionToFloor(srcFloor);
+			
 			// sending open door
 			cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN + String.format(" %s", this.id), eport);
 			System.out.println(String.format("sub-%d: sending open door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
 			eSocket.send(cPacket);
-			
-			// send update to floor that the elevator has arrived
-			sendPositionToFloor(srcFloor);
 			
 			// listen for ack to open
 			eSocket.receive(aPacket);
@@ -620,7 +621,7 @@ class ElevatorHandler extends Thread {
 					keepMoving = false;
 				}
 				else {
-					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1], eport);
+					cPacket = Scheduler.createPacket(Scheduler.ACK, rPacketParsed[1] + String.format(" %s", this.id), eport);
 					System.out.println(String.format("sub-%d: sending continue ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
