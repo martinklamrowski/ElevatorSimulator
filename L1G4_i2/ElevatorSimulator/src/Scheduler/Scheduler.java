@@ -1,6 +1,7 @@
 /*
  * SYSC3303 - ElevatorHandler
  * Author: Martin Klamrowski
+ * CoAuthor: Angie Byun
  * Date: 29/1/2019 
  */
 package Scheduler;
@@ -14,6 +15,7 @@ import java.math.*;
  * Class acting as the interface for the FloorSubsystem. Submits new requests to the ElevatorHandler.
  * 
  * @author Marti
+ *
  */
 public class Scheduler {
 	
@@ -246,22 +248,27 @@ public class Scheduler {
 			if (distance < 0) {
 				calculated = 1;
 			}
+			// request is below and request direction is same as elevator direction
 			else if (distance > 0 && requestedDir.equals(currentElevatorDir)) {
 				calculated = n + 2 - distance;
 			}
+			// request is below and request direction is NOT the same as elevator direction
 			else if (distance > 0 && !requestedDir.equals(currentElevatorDir)) {
 				calculated = n + 1 - distance;
 			}
 		}
 		// current direction of elevator is UP
 		else if (currentElevatorDir.equals("UP")) {
+			// request is below
 			if (distance > 0) {
 				calculated = 1;
 			}
+			// request is above and request direction is same as elevator direction 
 			else if (distance < 0 && requestedDir.equals(currentElevatorDir)) {
 				distance = Math.abs(distance);
 				calculated = n + 2 - distance;
 			}
+			// request is above an request direction is NOT the same as elevator direction
 			else if (distance < 0 && !requestedDir.equals(currentElevatorDir)) {
 				distance = Math.abs(distance);
 				calculated = n + 1 - distance;
