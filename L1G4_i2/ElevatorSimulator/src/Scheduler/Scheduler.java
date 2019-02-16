@@ -38,7 +38,10 @@ public class Scheduler {
 	
 	/* ## NETWORK INFO ## */
 	final int HOSTPORT = 8008;
-	final int EPORT = 3137;
+	final int EPORT1 = 3137;
+	final int EPORT2 = 3237;
+	final int EPORT3 = 3337;
+	final int EPORT4 = 3437;
 	final int FPORT = 6520;
 	DatagramSocket hostSocket;												// receiving from floor system on this socket
 	DatagramSocket floorSocket;												// sending to floor on this socket
@@ -86,10 +89,10 @@ public class Scheduler {
 		upQ4 = new ArrayBlockingQueue<String>(100);
 		downQ4 = new ArrayBlockingQueue<String>(100);
 		
-		handler1 = new ElevatorHandler(EPORT, FPORT, upQ1, downQ1, 1, "IDLE", 1);
-		handler2 = new ElevatorHandler(EPORT, FPORT, upQ2, downQ2, 1, "IDLE", 2);
-		handler3 = new ElevatorHandler(EPORT, FPORT, upQ3, downQ3, 10, "IDLE", 3);
-		handler4 = new ElevatorHandler(EPORT, FPORT, upQ4, downQ4, 20, "IDLE", 4);
+		handler1 = new ElevatorHandler(EPORT1, FPORT, upQ1, downQ1, 1, "IDLE", 1);
+		handler2 = new ElevatorHandler(EPORT2, FPORT, upQ2, downQ2, 1, "IDLE", 2);
+		handler3 = new ElevatorHandler(EPORT3, FPORT, upQ3, downQ3, 10, "IDLE", 3);
+		handler4 = new ElevatorHandler(EPORT4, FPORT, upQ4, downQ4, 20, "IDLE", 4);
 	}
 	
 	
