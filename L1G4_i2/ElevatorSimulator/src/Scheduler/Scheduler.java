@@ -475,7 +475,7 @@ class ElevatorHandler extends Thread {
 		
 		String srcFloor, destFloor;
 		String[] parsedData;
-		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates
+		boolean keepMoving = true; // if the elevator is already there no need for positional updates//TODO
 		
 		parsedData = request.split(" ");
 		srcFloor = parsedData[1];
@@ -590,7 +590,7 @@ class ElevatorHandler extends Thread {
 	public void performDropoff(String ins, String request) {
 		String destFloor;
 		String[] parsedData;
-		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates
+		boolean keepMoving = true; // if the elevator is already there no need for positional updates//TODO
 		
 		parsedData = request.split(" ");
 		destFloor = parsedData[3];
