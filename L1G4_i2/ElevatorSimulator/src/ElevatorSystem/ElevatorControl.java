@@ -306,6 +306,7 @@ public class ElevatorControl extends Thread{
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					send = 1;
 					break;
 
 				case DOWN_PICKUP:
@@ -315,11 +316,13 @@ public class ElevatorControl extends Thread{
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					send = 1;
 					break;
 
 				case STOP:
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
+					send = 0;
 					break;				}// end CMD switch
 					
 				/*--- send ACK message ---*/
@@ -331,12 +334,14 @@ public class ElevatorControl extends Thread{
 				    System.exit(1);
 				}
 				/*--- send elevator location ---*/
-				try {
-					sendSocket.send(sendPacket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-					System.exit(1);
-				}
+				if (send == 1) {
+					try {
+						sendSocket.send(sendPacket);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+						System.exit(1);
+					}
+				}// end update location
 			}//end header switch
 		}//end while (true)
 	}// end control()
