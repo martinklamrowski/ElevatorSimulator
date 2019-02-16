@@ -43,7 +43,7 @@ public class ElevatorControl {
 	
 	//private static final int MAX_ELEVATORS = 0;
 	//private int num_of_elevator;
-	private Elevator elevator = new Elevator("0", ElevatorDirection.E_HOLD);
+	private Elevator elevator;
 	
 	
 	/**
@@ -51,7 +51,7 @@ public class ElevatorControl {
 	 */
 	public ElevatorControl(int port, int num_elevator, String floor) {
 		this.num_elevator = num_elevator;
-		Elevator elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
+		elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
 		/*--- INITIALIZE socket ---*/
 		try {
 			sendSocket = new DatagramSocket();
@@ -89,7 +89,7 @@ public class ElevatorControl {
 		try {			
 			packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), port);
 		}catch (UnknownHostException uhe) {	
-			System.out.println("ELEVATOR " + num_elevator + ": unable to create packet (UnknownHostException), exiting.");
+			System.out.println("ELEVATOR: unable to create packet (UnknownHostException), exiting.");
 			System.exit(1);
 		}
 

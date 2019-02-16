@@ -104,8 +104,9 @@ public class Elevator implements Runnable {
 	
 	/**
 	 * open the door of the elevator
+	 * @param num_elevator 
 	 */
-	public void open() {
+	public void open(int num_elevator) {
 		// wait 2 seconds and open door
 		try {
 			Thread.sleep(2000);
@@ -113,13 +114,13 @@ public class Elevator implements Runnable {
 		    	e.printStackTrace();
 		    	System.exit(1);
 		}
-		System.out.println("ELEVATOR: Door OPENED at " + this.getCurrentFloor());
+		System.out.println("ELEVATOR " + num_elevator + ": Door OPENED at " + this.getCurrentFloor());
 	}
 	
 	/**
 	 * close elevator door
 	 */
-	public void close() {
+	public void close(int num_elevator) {
 		// wait 2 seconds and close door
 		try {
 			Thread.sleep(2000);
@@ -128,7 +129,7 @@ public class Elevator implements Runnable {
 		    	System.exit(1);
 		}
 
-		System.out.println("ELEVATOR: Door CLOSED at " + this.getCurrentFloor());
+		System.out.println("ELEVATOR " + num_elevator + ": Door CLOSED at " + this.getCurrentFloor());
 	}
 	
 
