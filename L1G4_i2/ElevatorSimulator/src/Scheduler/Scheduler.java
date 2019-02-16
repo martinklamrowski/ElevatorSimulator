@@ -446,13 +446,10 @@ class ElevatorHandler extends Thread {
 					dIns = Scheduler.UP_DROPOFF;
 					currentDirection = "UP";
 				}
-				else if (direction.equals("DOWN")) {
+				else { //down
 					dIns = Scheduler.DOWN_DROPOFF;
 					currentDirection = "DOWN";
-				}
-				else {
-					dIns = Scheduler.STOP;	// elevator is already there
-				}				
+				}		
 				performDropoff(dIns, request);
 			}
 			else {
@@ -590,7 +587,7 @@ class ElevatorHandler extends Thread {
 	public void performDropoff(String ins, String request) {
 		String destFloor;
 		String[] parsedData;
-		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates//TODO (ins.equals(Scheduler.STOP) ? false : true)
+		boolean keepMoving = true;
 		
 		parsedData = request.split(" ");
 		destFloor = parsedData[3];
