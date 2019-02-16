@@ -24,7 +24,7 @@ public class Floor {
 	Direction[] lampDirection;
 	
 	
-	public Floor(int floorNo, int numElev, boolean upper, boolean lower) {
+	public Floor(int numElev, int floorNo, boolean upper, boolean lower) {
 		floorNum = floorNo;
 		numElevators = numElev;
 		upLamp = false;
