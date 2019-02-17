@@ -11,38 +11,38 @@ TEAM MEMBERS AND ROLES:
 ~ Tashfiq Akhand - Timing Diagram, JUnit Testing
 ~ Martin Klamrowski - code for Scheduler 
 ~ Angie Byun - code for Scheduler 
-_________________________________________
+__________________________________________
 THE ELEVATOR SIMULATOR PROJECT CONSISTS OF: 
 
-	- 3 subsystems/directories located in /ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
+	- 3 subsystems/directories located in L1G4_i2/ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
 	- there are a total of 8 .java source files. 
-	- Timing Diagram for Error Scenario (PDF) located in /ElevatorSimulator/
+	- timing diagram for error scenario (PDF) located in /ElevatorSimulator/
 	- instructions for how to open and run files. 
 _____
 SETUP:
 (FOR ECLIPSE)
 	
-	- extract the L1G4_i2.zip file into the Eclipse Workspace
+	- extract the L1G4_i2.zip file
 	- in Eclipse navigate to File>Open Projects from File System
 	- click 'Directory'
-	- find the ElevatorSystem directory and click 'Finish'
+	- find the L1G4_i2/ElevatorSimulator/ directory and click 'Finish'
 	- the main files for the system are ElevatorControl.java, Scheduler.java, FloorSubsystem.java
 _______
 RUNNING: 
 note: the FloorSubsystem provides the requests immediately on so ensure the Scheduler and ElevatorControl are running before 
 
 	- in Eclipse, run the Scheduler.java and ElevatorControl.java files, and then the FloorSubsystem.java file
-	- the input request sequence provided by the FloorSubsystem is: 1-16, 5-1, 3-18, 1-7, 1-21, 7-1, 1-4, 18-1
+	- the input requests provided by the FloorSubsystem are: 1-4, 5-1, 3-18, 1-7, 1-21, 7-1, 1-4, 18-1
 	- you can open 3 consoles to show the output of all 3 systems:
 		> the ElevatorControl prints what floor the elevator is at, lamp information and door opening and closing actions
 		> the FloorSubsystem shows what floor lamps have been lit and the outgoing requests sent to the Scheduler with time stamps
-		> the Scheduler shows elevator and floor information with time stamps
+		> the Scheduler shows data transfer between all the systems
 _______
 TESTING:
 	
 	- JUnit testing included for each subsystem
 	- to run all tests, run AllTests.java in Eclipse
-	- ensure the JUnit is included in the project build path
+
 ____________________________________
 ELEVATOR TIMING DATA AND ASSUMPTIONS:
 (data obtained from Herzberg)
