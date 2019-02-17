@@ -40,12 +40,6 @@ public class ElevatorTest extends TestCase{
 		Elevator e2 = new Elevator("4", direction.E_HOLD); //creating second elevator object
 		assertEquals(ElevatorStatus.E_IN_USE, e.getStatus());
 		assertEquals(4, control.toInt("4"));
-		
-//		String a = "0";
-//		byte b[] = a.getBytes();
-//		String ans = b.toString();
-//		String[] msg = ans.replaceFirst("\0", "").split("\0");
-//		assertEquals(msg, control.packetToString(b));
 	}
 	
 	//Testing the created packeted 
