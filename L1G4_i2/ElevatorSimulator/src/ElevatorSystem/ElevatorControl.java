@@ -40,11 +40,13 @@ public class ElevatorControl extends Thread{
 	private DatagramPacket sendPacket, receivePacket, sendAPacket;
 	
 	
+	//private static final int MAX_ELEVATORS = 0;
+	//private int num_of_elevator;
 	private Elevator elevator;
 	
 	
 	/**
-	 * constructor, initialize socket and elevator lamp
+	 * constructor, initalize socket and elevator lamp
 	 */
 	public ElevatorControl(int port, int num_elevator, String floor) {
 		this.num_elevator = num_elevator;
@@ -158,10 +160,7 @@ public class ElevatorControl extends Thread{
 					System.out.println("cmd, UP for drop off");
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
-					String f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA,f,receivePacket.getPort());
-					System.out.println(packetToString(sendPacket.getData()));
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved up, now at Floor " + elevator.getCurrentFloor());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
@@ -179,10 +178,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
-					f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort());
-					System.out.println(packetToString(sendPacket.getData()));
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
@@ -227,7 +223,6 @@ public class ElevatorControl extends Thread{
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator STOPPED at " + elevator.getCurrentFloor());
 					send = 0;
-					s_elevator = -1;		// elevator job stop
 					break;		// end STOP
 
 				}// end CMD switch
@@ -236,7 +231,6 @@ public class ElevatorControl extends Thread{
 				sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
 				try {
 					sendSocket.send(sendAPacket);
-					System.out.println("ELEVATOR " + num_elevator + " send ACK " + packetToString(sendPacket.getData()));
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				    System.exit(1);
@@ -246,12 +240,11 @@ public class ElevatorControl extends Thread{
 				if (send == 1) {
 					try {
 						sendSocket.send(sendPacket);
-						System.out.println("ELEVATOR " + num_elevator + " send location packet" + packetToString(sendPacket.getData()));
 					} catch (IOException e1) {
 						e1.printStackTrace();
 						System.exit(1);
 					}
-					send = -1;
+					send = 0;
 				}// end if (location update)
 				break;		// end CMD			
 
@@ -263,9 +256,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_UP;		// move up
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
-					String f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort()); 		// send elevator location
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
 					s_elevator = 1;				
 					break;		// end UP_PICKUP
 
@@ -273,9 +264,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_DOWN;		// move down
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
-					f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort()); 
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 
 					s_elevator = 1;
 					break;		// end DOWN_PICKUP
 
@@ -283,9 +272,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
-					f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort());
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;
 					break;		// end UP_DROPOFF
 
@@ -293,9 +280,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
-					f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort());
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
 				}// end CMD switch
@@ -303,7 +288,6 @@ public class ElevatorControl extends Thread{
 				/*--- send elevator location message ---*/
 				try {
 					sendSocket.send(sendPacket);
-					System.out.println("ELEVATOR " + num_elevator + " send location packet" + packetToString(sendPacket.getData()));
 				} catch (IOException e1) {
 					e1.printStackTrace();
 					System.exit(1);
@@ -314,36 +298,30 @@ public class ElevatorControl extends Thread{
 				System.out.println("data");
 				/*----- DATA packet received -----*/
 				data = ins;
-				num_lamp = toInt(data[1]); 	// record elevator lamp
 				switch (cmd[1]) {
 				case UP_PICKUP:
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
-					String f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort());
-					System.out.println(packetToString(sendPacket.getData()));
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
-					//num_lamp = toInt(data[1]); 	// record elevator lamp
+					num_lamp = toInt(data[1]); 	// record elevator lamp
 					send = 1;
 					break;
 
 				case DOWN_PICKUP:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
-					f = elevator.getCurrentFloor();
-					System.out.println(f);
-					sendPacket = createPacket(DATA, f,receivePacket.getPort());
+					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
-					//num_lamp = toInt(data[1]); 	// record elevator lamp
+					num_lamp = toInt(data[1]); 	// record elevator lamp
 					send = 1;
 					break;
 
 				case STOP:
 					s_elevator = 1;		// elevator job pick up
-					//num_lamp = toInt(data[1]); 	// record elevator lamp
+					num_lamp = toInt(data[1]); 	// record elevator lamp
 					send = 0;
 					break;				}// end CMD switch
 					
@@ -351,7 +329,6 @@ public class ElevatorControl extends Thread{
 				sendAPacket = createPacket(ACK, data[1], receivePacket.getPort());
 				try {
 					sendSocket.send(sendAPacket);
-					System.out.println("ELEVATOR " + num_elevator + " send location packet" + packetToString(sendAPacket.getData()));
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				    System.exit(1);
@@ -360,7 +337,6 @@ public class ElevatorControl extends Thread{
 				if (send == 1) {
 					try {
 						sendSocket.send(sendPacket);
-						System.out.println("ELEVATOR " + num_elevator + " send location packet" + packetToString(sendPacket.getData()));
 					} catch (IOException e1) {
 						e1.printStackTrace();
 						System.exit(1);

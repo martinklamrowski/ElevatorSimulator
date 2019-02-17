@@ -208,6 +208,7 @@ public class FloorSubsystem {
 		buffer = createPacketData(CMD, "0x10");
 		send(buffer, SCHEDPORT, socket);
 		System.out.println("Floor Subsystem: Requesting to send elevator input. Waiting for acknowledgment...");
+//		Block until acknowledgment message is received
 		receive(socket, buffer);
 		msg = readPacketData(buffer);
 		if (Integer.parseInt(msg[0]) == ACK) {
@@ -215,25 +216,18 @@ public class FloorSubsystem {
 				System.out.println("Floor Subsystem: CMD acknowledgment received. Sending input to Scheduler");
 				response = createServiceRequest(time, start, dest, dir);
 				send(response, SCHEDPORT, socket);
-//				System.out.println(readPacketData(response)[0]);
-//				System.out.println(readPacketData(response)[1]);
 				System.out.println("Floor Subsystem: Waiting for acknowledgment of data packet...");
+//				Block until acknowledgment message is received
 				receive(socket, buffer);
 				data = readPacketData(buffer);
 				acknowledgment = readPacketData(response);
-//				if (!data[1].equals(acknowledgment[1])) {
-//					System.out.println("Floor Subsystem: Data not the same. Restarting exchange");
-//					sendServiceRequest(start, dest, dir);
-//				}
-//				else {
-					System.out.println("Floor Subsystem: Data packet acknowledged. Scheduler data is: " + data[1]);
-//				}
+				System.out.println("Floor Subsystem: Data packet acknowledged. Scheduler data is: " + data[1]);
 			}
 		}
 	}
 
 	/**
-	 * Respond to an incoming CMD message
+	 * Respond to an incoming CMD message from the Scheduler
 	 * 
 	 * @param msg, tempPort
 	 * 
@@ -250,14 +244,14 @@ public class FloorSubsystem {
 				response = createPacketData(ACK,"0x11");
 				send(response, tempPort, floorSocket);
 				System.out.println("Floor Subsystem: Waiting for floor number...");
+//				Block until Scheduler sends floor number elevator has departed from
 				receive(floorSocket, buffer);
 				data = readPacketData(buffer);
-				//acknowledgment = readPacketData(response);
-				if (currentDirection == Direction.UP) {
+				if (floors.get(Integer.parseInt(data[1])).getUpLampStatus()) {
 					floors.get(Integer.parseInt(data[1])).setUpLampOff();
 					direction = "up";
 				}
-				else if (currentDirection == Direction.DOWN) {
+				else if (floors.get(Integer.parseInt(data[1])).getDownLampStatus()) {
 					floors.get(Integer.parseInt(data[1])).setDownLampOff();
 					direction = "down";
 				}
@@ -269,7 +263,7 @@ public class FloorSubsystem {
 	}
 	
 	/**
-	 * Run the bulk of the subsystem
+	 * Listen for messages sent from the scheduler
 	 * 
 	 * @param ins
 	 * @param request
@@ -282,7 +276,7 @@ public class FloorSubsystem {
 		
 		while (listening) {
 			try {
-//				System.out.println("I'm listening");
+//				Block until Scheduler starts exchange signaling elevator has arrived
 				tempPort = receive(floorSocket, buffer).getPort();
 				data = readPacketData(buffer);
 				if (Integer.parseInt(data[0]) == CMD) {
@@ -302,20 +296,22 @@ public class FloorSubsystem {
 		FloorSubsystem floorSubsystem = new FloorSubsystem();
 		Thread inputHandler;
 		
-
+//		Add floors to the floorSubsystem
 		for (int i = 0; i < floorSubsystem.floorTotal; i++) {
 			if (i == floorSubsystem.floorMin) floorSubsystem.floors.add(new Floor(1, i+1, false, true));
 			else if (i == floorSubsystem.floorTotal - floorSubsystem.floorMin) floorSubsystem.floors.add(new Floor(1, i+1, true, false));
 			else floorSubsystem.floors.add(new Floor(1, i+1, false, false));
 		}
+		
 		System.out.println(System.getProperty("user.dir"));
+//		Create an input handler for reading user requests from a text file, and sending the 
+//		requests to the scheduler on a timed basis
 		inputHandler = new Thread(new UserInputHandler(floorSubsystem), "User Input Handler");
 		inputHandler.start();
+		
 		System.out.println("Starting Floor Subsystem");
 		floorSubsystem.running();
 		
-		
-		//for (Floor f : floors) { }
    }
 }
 

@@ -11,6 +11,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import FloorSystem.FloorSubsystem.Direction;
+
+/**
+ * This class is used to handle an input file filled with elevator requests.
+ * The requests are placed into an array, and sent to the Scheduler based on the request timestamp
+ * 
+ * @author Sunjay Panesar
+ */
+
 public class UserInputHandler implements Runnable {
 
 	DatagramSocket requestSocket;
@@ -32,11 +40,13 @@ public class UserInputHandler implements Runnable {
 	/**
 	 * Take a flat file and parse lines of text for requests in the following form: 
 	 * "XX:XX:XX.XXX X DIRECTION X"
-	 * @param filePath
+	 * @param filePath, list
 	 * 
 	 */
 	public void parseInputFile(String filePath, ArrayList<String> list) throws FileNotFoundException, IOException {
 		
+//		Place file into buffered reader, then iterate through each line. If the line string 
+//		matches the given pattern, place the string into a String ArrayList
 		BufferedReader br = new BufferedReader(new FileReader(filePath));
 		String line = null;
 		while ((line = br.readLine()) != null) {
@@ -50,6 +60,13 @@ public class UserInputHandler implements Runnable {
 		br.close();
 	}
 	
+	/**
+	 * Take a list of service request strings and separate each entry into variables, then
+	 * send the requests, waiting the appropriate amount of time between each request
+	 * 
+	 * @param list
+	 * 
+	 */
 	public void parseServiceReqs(ArrayList<String> list) {
 		int hour = 0;
 		int min = 0;
@@ -62,6 +79,7 @@ public class UserInputHandler implements Runnable {
 		int destFloor = 0;
 		Direction targetDirection = Direction.IDLE;
 
+//		Parse the previously generated list and separate each line into variables
 		for (String s : list) {
 			String data[] = s.split(" ");
 			String time[] = data[0].split("[:.]");
@@ -69,6 +87,7 @@ public class UserInputHandler implements Runnable {
 			min = Integer.parseInt(time[1]);
 			sec = Integer.parseInt(time[2]);
 			mSec = Integer.parseInt(time[3]);
+//			Convert the time variables into a single time value in milliseconds
 	        timeTotal = hour*60*60*1000 +
 	                    min*60*1000 +
 	                    sec*1000 +
@@ -112,24 +131,6 @@ public class UserInputHandler implements Runnable {
 	 * @param s
 	 * @return data
 	 */
-	
-	public Object[] getInputData(String s) {
-		int numParameters = 7;
-		Object[] data = new Object[numParameters];
-		String[] input = s.split(" ");
-		String[] time = input[0].split("[:.]");
-		data[0] = Integer.parseInt(time[0]);
-		data[1] = Integer.parseInt(time[1]);
-		data[2] = Integer.parseInt(time[2]);
-		data[3] = Integer.parseInt(time[3]);
-		data[4] = Integer.parseInt(input[1]);
-		if (input[2].toUpperCase().equals("UP")) data[5] = Direction.UP;
-		else if (input[2].toUpperCase().equals("DOWN")) data[5] = Direction.DOWN;
-		data[6] = Integer.parseInt(input[3]);
-		
-		return data;
-	}
-	
 	
 	public void run() {
 
