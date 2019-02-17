@@ -205,12 +205,12 @@ public class ElevatorControl extends Thread{
 						if (s_elevator == 1) {
 							/*--- door open for pick up, elevator lamp ON ---*/
 							elevator.Lamp[num_lamp-1] = s_elevator;
-							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp + ": ");
 							printLamp(elevator.Lamp);
 						}else if (s_elevator == 0) {
 							/*--- door open for drop off, elevator lamp OFF ---*/
 							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
-							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
+							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp + ": ");
 							printLamp(elevator.Lamp);
 						}else {
 							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
