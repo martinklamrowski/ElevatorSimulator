@@ -59,7 +59,6 @@ public class Scheduler {
 	private BlockingQueue<String> downQ4;									// queue with down requests (elevator 4)
 	
 	// objects performing elevator movement calculations for each elevator in separate thread
-	//private ArrayList<ElevatorHandler> handlers;
 	private ElevatorHandler handler1;
 	private ElevatorHandler handler2;
 	private ElevatorHandler handler3;
@@ -173,9 +172,8 @@ public class Scheduler {
 					// determine which elevator queue to add request to
 					
 					/* ###################################################### */
-					/* MAIN ELEVATOR SCHEDULING ALGORITHM //TODO */
-					/* ###################################################### */				
-					
+					/* MAIN ELEVATOR SCHEDULING ALGORITHM */
+					/* ###################################################### */					
 					String[] temp = dPacketParsed[1].split(" ");
 					
 					int FS1 = calculateSuitability(FLOORS, handler1.currentFloor, Integer.parseInt(temp[1]), handler1.currentDirection, temp[2]);
@@ -419,7 +417,7 @@ class ElevatorHandler extends Thread {
 				direction = parsedData[2];
 				
 				/*
-				 *  determining which way the elevator needs to go to pickup and dropoff //TODO
+				 *  determining which way the elevator needs to go to pickup and dropoff
 				 *	DATA packet format: '\3\"time src_floor direction dest_floor"\'
 				 *	
 				 *	if elevator is below src_floor - need to move elevator up
@@ -472,14 +470,14 @@ class ElevatorHandler extends Thread {
 		
 		String srcFloor, destFloor;
 		String[] parsedData;
-		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates//TODO (ins.equals(Scheduler.STOP) ? false : true)
+		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates
 		
 		parsedData = request.split(" ");
 		srcFloor = parsedData[1];
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport); //TODO make this less fugly
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport);
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
@@ -595,7 +593,7 @@ class ElevatorHandler extends Thread {
 		destFloor = parsedData[3];
 		
 		byte[] buffer = new byte[8];
-		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport); //TODO make this less fugly
+		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport);
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;

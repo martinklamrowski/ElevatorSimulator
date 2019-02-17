@@ -1,5 +1,5 @@
 ~~~
-Authors: Martin Klamrowski, Angie Byun
+Authors: Martin Klamrowski, Angie Byun, Tashfiq Akhand
 Last modified: 16/2/2019
 ~~~
 
@@ -7,16 +7,17 @@ Last modified: 16/2/2019
 ______________________
 TEAM MEMBERS AND ROLES:
 ~ Arianna Shi - code for Elevator Subsystem
-~ Sunjay Panesar - code for Floor Subsystem
+~ Sunjay Panesar - code for Floor Subsystem, code for Elevator Subsystem, code for Scheduler
 ~ Tashfiq Akhand - Timing Diagram, JUnit Testing
 ~ Martin Klamrowski - code for Scheduler 
-~ Angie Byun - code for Scheduler 
+~ Angie Byun - code for Scheduler, Class Diagram
 __________________________________________
 THE ELEVATOR SIMULATOR PROJECT CONSISTS OF: 
 
 	- 3 subsystems/directories located in L1G4_i2/ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
 	- there are a total of 8 .java source files. 
 	- timing diagram for error scenario (PDF) located in /ElevatorSimulator/
+	- updated class diagram (PDF) located in /ElevatorSimulator/
 	- instructions for how to open and run files. 
 _____
 SETUP:
