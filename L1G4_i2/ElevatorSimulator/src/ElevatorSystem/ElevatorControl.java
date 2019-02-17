@@ -120,17 +120,6 @@ public class ElevatorControl extends Thread{
 		return a;
 	}
 	
-	/**
-	 * print the lamp status, 0: off	1:on
-	 * @param l
-	 */
-	private void printLamp(int[] l) {
-		for (int i = 0; i<l.length; i++) {
-			System.out.print(l[i]);
-			System.out.print(" ");
-		}
-		System.out.print("\n");
-	}
 		
 	/**
 	 * function called in main to control corresponding elevator do the received request
@@ -205,13 +194,11 @@ public class ElevatorControl extends Thread{
 						if (s_elevator == 1) {
 							/*--- door open for pick up, elevator lamp ON ---*/
 							elevator.Lamp[num_lamp-1] = s_elevator;
-							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp + ": ");
-							printLamp(elevator.Lamp);
+							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
 						}else if (s_elevator == 0) {
 							/*--- door open for drop off, elevator lamp OFF ---*/
 							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
-							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp + ": ");
-							printLamp(elevator.Lamp);
+							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
 						}else {
 							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
 						}
