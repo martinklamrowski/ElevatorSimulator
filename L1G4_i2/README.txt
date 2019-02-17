@@ -67,6 +67,11 @@ ELEVATOR ALGORITHM:
 ______________
 TIMING DIAGRAM:
 
+The timing diagram taken into the event of the elevator moving towards the designated floor to where the user resides. 
+The lines of the diagram that are horizonal represents the remaining in the state described in the second column and the vertical line 
+represents the shifting of states, the line is associated to a timeline presented below and the diagram shows all 3 system 
+synchronization. The error scenario labelled on the horizontal lines is where the possibility of an error can occur 
+which would stop the timing diagram and not continue furthur. If the error did not occur, then timing digram would resume.
 
 
 
