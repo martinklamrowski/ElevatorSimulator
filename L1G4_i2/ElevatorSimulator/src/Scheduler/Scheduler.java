@@ -531,15 +531,17 @@ class ElevatorHandler extends Thread {
 					System.out.println(String.format("sub-%d: sending continue ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));					
 				}				
 				eSocket.send(cPacket);
-			}
-			
-			// listen for ack to stop
-			eSocket.receive(aPacket);
-			
-			// parsing ack
-			aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
-			System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
-			System.out.println(Arrays.toString(aPacketParsed));			
+				
+				if (!keepMoving) {
+					// listen for ack to stop
+					eSocket.receive(aPacket);
+					
+					// parsing ack
+					aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
+					System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
+					System.out.println(Arrays.toString(aPacketParsed));	
+				}
+			}					
 			
 			// send update to floor that the elevator has arrived
 			sendPositionToFloor(srcFloor);
