@@ -32,7 +32,7 @@ RUNNING:
 note: the FloorSubsystem provides the requests immediately on so ensure the Scheduler and ElevatorControl are running before 
 
 	- in Eclipse, run the Scheduler.java and ElevatorControl.java files, and then the FloorSubsystem.java file
-	- the input request sequence provided by the FloorSubsystem is: 1-6, 6-5, 4-8, 1-5, 7-1 ***************
+	- the input request sequence provided by the FloorSubsystem is: 1-16, 5-1, 3-18, 1-7, 1-21, 7-1, 1-4, 18-1
 	- you can open 3 consoles to show the output of all 3 systems:
 		> the ElevatorControl prints what floor the elevator is at, lamp information and door opening and closing actions
 		> the FloorSubsystem shows what floor lamps have been lit and the outgoing requests sent to the Scheduler with time stamps
