@@ -668,7 +668,9 @@ class ElevatorHandler extends Thread {
 			// parsing ack
 			aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
 			System.out.println(String.format("sub-%d: received ack - done ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
-			System.out.println(Arrays.toString(aPacketParsed));			
+			System.out.println(Arrays.toString(aPacketParsed));
+			
+			currentDirection = "IDLE";
 		}
 		catch (Exception e) {
 			System.out.println(String.format("sub-%d: unable to communicate with elevator system, aborting request.", this.id));
