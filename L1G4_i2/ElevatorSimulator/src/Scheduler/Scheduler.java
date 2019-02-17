@@ -654,7 +654,7 @@ class ElevatorHandler extends Thread {
 			
 			// parsing ack
 			aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
-			System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", new String(aPacket.getData()), aPacket.getData()));
+			System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 			System.out.println(Arrays.toString(aPacketParsed));
 			
 			// sending close door
