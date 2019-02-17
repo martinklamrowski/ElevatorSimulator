@@ -8,12 +8,18 @@ package ElevatorSystem;
 public class Elevator implements Runnable {
 	public String currentFloor;
 	public ElevatorDirection direction;
+	int[] Lamp = new int[MAX_FLOOR];
 	//public boolean _exit = false;
 	private static final int MAX_FLOOR = 22;		// maximum floor number
 
 	public Elevator(String currentFloor, ElevatorDirection direction) {
 		this.currentFloor = currentFloor;
 		this.direction = direction;
+		
+		/*--- INITILIZE Elevator Lamp ---*/
+		for(int i =0; i<MAX_FLOOR; i++) {
+			Lamp[i] = 0;
+		}
 		
 	}
 	 	
