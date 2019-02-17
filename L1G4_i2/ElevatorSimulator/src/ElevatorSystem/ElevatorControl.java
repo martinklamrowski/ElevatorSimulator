@@ -26,27 +26,21 @@ public class ElevatorControl extends Thread{
 	private static final String DOOR_OPEN = "0x3A";
 	private static final String DOOR_CLOSE = "0x3B";
 	private static final String STOP = "0x3C";
+	public static ElevatorControl Elv_1, Elv_2, Elv_3, Elv_4;
 	
-	/* ## CONSTANT VARIABLE IDENTIFIES ## */
-	private static final int MAX_FLOOR = 22;
 	
 	/*	variable identifies	 */
 	private int num_elevator = 0; 
-	private static int num_lamp = 0;
+	private int num_lamp = 0;
 	private static int send = 0;
 	private static int s_elevator = 0;		//elevator status	1: pickup, lamp ON		0:drop off, lamp OFF
-	int[] Lamp = new int[MAX_FLOOR];
 	private DatagramSocket sendSocket, receiveSocket;
 	private DatagramPacket sendPacket, receivePacket, sendAPacket;
-	
-	
-	//private static final int MAX_ELEVATORS = 0;
-	//private int num_of_elevator;
 	private Elevator elevator;
 	
 	
 	/**
-	 * constructor, initalize socket and elevator lamp
+	 * constructor, initialize socket and elevator lamp
 	 */
 	public ElevatorControl(int port, int num_elevator, String floor) {
 		this.num_elevator = num_elevator;
@@ -60,10 +54,11 @@ public class ElevatorControl extends Thread{
 	        System.exit(1);
 		}
 		
-		/*--- INITILIZE Elevator Lamp ---*/
+		/*--- INITILIZE Elevator Lamp ---*
 		for(int i =0; i<MAX_FLOOR; i++) {
 			Lamp[i] = 0;
 		}
+*/		
 	}
 	
 	public void run() {
@@ -124,6 +119,18 @@ public class ElevatorControl extends Thread{
 		}	
 		return a;
 	}
+	
+	/**
+	 * print the lamp status, 0: off	1:on
+	 * @param l
+	 */
+	private void printLamp(int[] l) {
+		for (int i = 0; i<l.length; i++) {
+			System.out.print(l[i]);
+			System.out.print(" ");
+		}
+		System.out.print("\n");
+	}
 		
 	/**
 	 * function called in main to control corresponding elevator do the received request
@@ -148,7 +155,7 @@ public class ElevatorControl extends Thread{
 		    	}
 			
 			ins = packetToString(receivePacket.getData());
-				
+			
 			switch (ins[0]) {
 			case CMD:
 				/*====== CMD packet received ======*/
@@ -197,12 +204,14 @@ public class ElevatorControl extends Thread{
 					if (s_elevator != -1) {
 						if (s_elevator == 1) {
 							/*--- door open for pick up, elevator lamp ON ---*/
-							Lamp[num_lamp-1] = s_elevator;
-							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+							elevator.Lamp[num_lamp-1] = s_elevator;
+							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+							printLamp(elevator.Lamp);
 						}else if (s_elevator == 0) {
 							/*--- door open for drop off, elevator lamp OFF ---*/
-							Lamp[elevator.getIntFloor()-1] = s_elevator;
-							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
+							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
+							System.out.print("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
+							printLamp(elevator.Lamp);
 						}else {
 							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
 						}
@@ -350,10 +359,11 @@ public class ElevatorControl extends Thread{
 	 *  main function of the ElevatorControl class 
 	 */
 	public static void main(String[] args) {
-		ElevatorControl Elv_1 = new ElevatorControl(3137, 1, "1");
-		ElevatorControl Elv_2 = new ElevatorControl(3237, 2, "1");
-		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
-		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
+		Elv_1 = new ElevatorControl(3137, 1, "1");
+		Elv_2 = new ElevatorControl(3237, 2, "1");
+		Elv_3 = new ElevatorControl(3337, 3, "10");
+		Elv_4 = new ElevatorControl(3437, 4, "20");
+		
 		Elv_1.start();
 		Elv_2.start();
 		Elv_3.start();
