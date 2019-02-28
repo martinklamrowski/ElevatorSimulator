@@ -38,8 +38,9 @@ public class Floor {
 	}	
 	
 	public int getFloorNum() { return(this.floorNum); }
-	
 	public int getElevNum() { return(this.numElevators); }
+	public boolean getUpLampStatus() { return(this.upLamp); }
+	public boolean getDownLampStatus() { return(this.downLamp); }
 	
 	public Direction getDirection() { return(this.lampDirection[0]); }
 	

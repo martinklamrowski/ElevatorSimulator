@@ -1,5 +1,6 @@
 package ElevatorSystem;
 
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,12 +13,14 @@ import java.net.UnknownHostException;
  * @author ariannashi
  *
  */
-public class ElevatorControl {
+public class ElevatorControl extends Thread{
 	/* ## HEADER AND COMMAND IDENTIFIERS ## */
 	private static final String ACK = "1";
 	private static final String CMD = "2";
-	private static final String DATA = "3";
-	
+	private static final String DATA = "3";	
+
+	private static final String UP_MOVE = "0x35";
+	private static final String DOWN_MOVE = "0x34";
 	private static final String UP_PICKUP = "0x33";		// going up to pick up
 	private static final String UP_DROPOFF = "0x32"; 	// going
 	private static final String DOWN_PICKUP = "0x31";
@@ -25,46 +28,43 @@ public class ElevatorControl {
 	private static final String DOOR_OPEN = "0x3A";
 	private static final String DOOR_CLOSE = "0x3B";
 	private static final String STOP = "0x3C";
+	private static final String GO_IDLE = "0x3D";
+	public static ElevatorControl Elv_1, Elv_2, Elv_3, Elv_4;
 	
-	/* ## CONSTANT VARIABLE IDENTIFIES ## */
-	private static final int aport = 3137;
-	private static final int MAX_FLOOR = 22;
 	
 	/*	variable identifies	 */
-	private static int num_elevator = 0; 
-	private static int num_lamp = 0;
+	private int num_elevator = 0; 
+	private int num_lamp = 0;
 	private static int send = 0;
 	private static int s_elevator = 0;		//elevator status	1: pickup, lamp ON		0:drop off, lamp OFF
-	int[] Lamp = new int[MAX_FLOOR];
-	private DatagramSocket sendSocket, receiveSocket;
+	private DatagramSocket eSocket;
 	private DatagramPacket sendPacket, receivePacket, sendAPacket;
-	
-	static Elevator[] elevators;
-	
-	//private static final int MAX_ELEVATORS = 0;
-	//private int num_of_elevator;
-//	private Elevator elevator = new Elevator("0", ElevatorDirection.E_HOLD);
+	private Elevator elevator;
 	
 	
 	/**
-	 * constructor, initalize socket and elevator lamp
+	 * constructor, initialize socket and elevator lamp
 	 */
-	public ElevatorControl(Elevator[] e) {
-//		this.num_elevator = num_elevator;
-		elevators = e;
+	public ElevatorControl(int port, int num_elevator, String floor) {
+		this.num_elevator = num_elevator;
+		elevator = new Elevator(floor, ElevatorDirection.E_HOLD);
 		/*--- INITIALIZE socket ---*/
 		try {
-			sendSocket = new DatagramSocket();
-	        	receiveSocket = new DatagramSocket(aport);	        
+			eSocket = new DatagramSocket(port);
 		} catch (SocketException se) {
-			se.printStackTrace();
+			se.printStackTrace();   
 	        System.exit(1);
 		}
 		
-		/*--- INITILIZE Elevator Lamp ---*/
+		/*--- INITILIZE Elevator Lamp ---*
 		for(int i =0; i<MAX_FLOOR; i++) {
 			Lamp[i] = 0;
 		}
+*/		
+	}
+	
+	public void run() {
+		operate();
 	}
 	
 	/**
@@ -88,7 +88,7 @@ public class ElevatorControl {
 
 		try {			
 			packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), port);
-		}catch (UnknownHostException uhe) {			
+		}catch (UnknownHostException uhe) {	
 			System.out.println("ELEVATOR: unable to create packet (UnknownHostException), exiting.");
 			System.exit(1);
 		}
@@ -106,16 +106,6 @@ public class ElevatorControl {
 		String[] msg = info.replaceFirst("\0", "").split("\0");
 		return msg;
 	}
-	public static String[] dataToStringArray(String data) {
-		String[] msg = data.split(" ");
-		return msg;
-	}
-	
-	public int getElevNum(String ins) {
-		String[] elevString = ins.split(" ");
-		
-		return Integer.parseInt(elevString[1]);
-	}
 	
 	/**
 	 *  function transfers string to int 
@@ -127,262 +117,455 @@ public class ElevatorControl {
 		try {
 			a = Integer.parseInt(string);
 		} catch (NumberFormatException e) {
-			System.out.println("ERROR current floor");
+			System.out.println("ELEVATOR " + num_elevator + "ERROR current floor");
 		}	
 		return a;
 	}
-		
-	/**
-	 * function called in main to control corresponding elevator do the received request
-	 */
-	public void control() {
+	
+//	When CMD is received to move
+	public void operate() {
+		boolean keepMoving = false;
+		boolean relocating = false;
+		boolean droppedOff = false;
+		ElevatorDirection targetDir = ElevatorDirection.E_HOLD;
 		byte _data[] = new byte[100];
 		receivePacket = new DatagramPacket(_data, _data.length);
-		String[] ins = packetToString(receivePacket.getData());
-		String[] cmd = null;
-		String[] data = null;		
-		String code = null;
-		int currElev = 0;
-		
-		while(true) {
-			try {
-//				System.out.println("ELEVATOR: Elevators Waiting ..."); // so we know we're waiting
-		        	receiveSocket.receive(receivePacket);
-		        	currElev = getElevNum(packetToString(receivePacket.getData())[1]) - 1;
-		        	System.out.print("ELEVATOR " + elevators[currElev].getId() + ": received ");
-		    	} catch (IOException e) {
-		    		System.out.print("ELEVATOR " + this.num_elevator + ": IO Exception: likely:");
-		        	System.out.println("Receive Socket Timed Out.\n" + e);
-		        	e.printStackTrace();
-		        	System.exit(1);
-		    	}
+		String[] ins;
+		String[] data;
+		String dir = "";
+		String action = "";
+		System.out.println("ELEVATOR " + num_elevator + ": Elevator Waiting ..."); // so we know we're waiting
+		while (true) {
+//			Move this to control()
+			elevReceive(receivePacket);
+			ins  = packetToString(receivePacket.getData());
+			System.out.printf("cmd, %s \n", ins[1]);
+			switch (ins[1]) {
+			case UP_MOVE: 
+				targetDir = ElevatorDirection.E_UP;
+				dir = "UP";
+				relocating = true;
+				keepMoving = true;
+				sendAck(receivePacket, ins);
+				break;
+			case DOWN_MOVE: 
+				targetDir = ElevatorDirection.E_DOWN;
+				dir = "DOWN";
+				relocating = true;
+				keepMoving = true;
+				sendAck(receivePacket, ins);
+				break;
+			case UP_DROPOFF: 
+				targetDir = ElevatorDirection.E_UP;
+				dir = "UP";
+				action = "dropped off";
+				keepMoving = true;
+				droppedOff = true;
+//				Something to turn current floor lamp off
+				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + elevator.getIntFloor());
+				sendAck(receivePacket, ins);
+				break;
+			case DOWN_DROPOFF: 
+				targetDir = ElevatorDirection.E_DOWN;
+				dir = "DOWN";
+				action = "dropped off";
+				keepMoving = true;
+				droppedOff = true;
+				//		Something to turn current floor lamp off
+				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + elevator.getIntFloor());
+				sendAck(receivePacket, ins);
+				break;
+			case GO_IDLE: 
+				targetDir = ElevatorDirection.E_HOLD;
+				dir = "DOWN";
+				action = "dropped off";
+				droppedOff = true;
+				//		Something to turn current floor lamp off
+				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF and stopping at " + elevator.getIntFloor());
+				sendAck(receivePacket, ins);
+				break;
+			case UP_PICKUP: 
+				targetDir = ElevatorDirection.E_UP;
+				dir = "UP";
+				action = "picked up";
+				keepMoving = true;
+				sendAck(receivePacket, ins);
+				elevReceive(receivePacket);
+				System.out.printf("cmd, passenger %s at %s, moving %s \n", action, elevator.getCurrentFloor(), dir);
+				data = packetToString(receivePacket.getData());
+//				System.out.printf("cmd, %s \n", data[1]);
+			//	Something to turn target floor lamp on using data
+				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
+				num_lamp = Integer.parseInt(data[1]);
+				elevator.Lamp[num_lamp - 1] = 1;
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+				sendAck(receivePacket, data);
+				break;
+			case DOWN_PICKUP: 
+				targetDir = ElevatorDirection.E_DOWN;
+				dir = "UP";
+				action = "picked up";
+				keepMoving = true;
+				sendAck(receivePacket, ins);
+				elevReceive(receivePacket);
+				System.out.printf("cmd, passenger %s at %s, moving %s \n", action, elevator.getCurrentFloor(), dir);
+				data = packetToString(receivePacket.getData());
+				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
+			//	Something to turn target floor lamp on using data
+				num_lamp = Integer.parseInt(data[1]);
+				elevator.Lamp[num_lamp - 1] = 1;
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+				sendAck(receivePacket, data);
+				break;
+			case STOP: 
+				stopOpenClose(receivePacket);
+				break;
+			}
+
+			if (relocating) System.out.printf("cmd, moving %s to pickup passenger\n", dir);
+			else if (droppedOff) System.out.printf("cmd, passenger %s at %s, moving %s \n", action, elevator.getCurrentFloor(), dir);
 			
-			ins = packetToString(receivePacket.getData());
-//			System.out.println("Message data is: " + ins[1]);
-			switch (ins[0]) {
-			case CMD:				
-				/*====== CMD packet received ======*/
-				cmd = ins;
-				currElev = getElevNum(cmd[1]) - 1;
-				
-				switch (dataToStringArray(cmd[1])[0]) {
-				/*--- cases for different CMD code ---**/
-				case UP_DROPOFF:
-					System.out.println("cmd, UP for drop off");
-					elevators[currElev].direction = ElevatorDirection.E_UP;	//move up
-					elevators[currElev].run();
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved up, now at Floor " + elevators[currElev].getCurrentFloor());
-					send = 1;	// send elevator location
-					s_elevator = 0;		// elevator job drop off
-					break;		// end UP_DROPOFF				
-				case UP_PICKUP:	
-					System.out.println("cmd, UP for pick up");
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": wait for elevator data ");
-					s_elevator = 1;		// elevator job pick up
-					send = 0;
-					break;		// end UP_PICKUP
-				case DOWN_DROPOFF:
-					System.out.println("cmd, DOWN for drop off");
-					elevators[currElev].direction = ElevatorDirection.E_DOWN;	//move down
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator move DOWN, now at Floor " + elevators[currElev].getCurrentFloor());
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					send = 1;	// send elevator location
-					s_elevator = 0;		// elevator job drop off
-					break;		// end DOWN_DROPOFF
-				case DOWN_PICKUP:
-					System.out.println("cmd, UP for drop off");
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": wait for elevator data ");
-					s_elevator = 1;		// elevator job pick up
-					send = 0;
-					break;		// end DOWN_PICKUP
-				case DOOR_OPEN:	
-					System.out.println("cmd, OPEN door");
-					elevators[currElev].open();
-					send = 0;
-					if (s_elevator != -1) {
-						if (s_elevator == 1) {
-							/*--- door open for pick up, elevator lamp ON ---*/
-							Lamp[num_lamp-1] = s_elevator;
-							System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator Lamp ON at " + num_lamp);
-						}else if (s_elevator == 0) {
-							/*--- door open for drop off, elevator lamp OFF ---*/
-							Lamp[elevators[currElev].getIntFloor()-1] = s_elevator;
-							System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator Lamp OFF at " + num_lamp);
-						}else {
-							System.out.println("ELEVATOR " + elevators[currElev].getId() + ": ERROR elevator status");
-						}
-						s_elevator = -1;		// elevator job open door
-					}// end if not -1
-					break;		// end DOOR_OPEN				
-				case DOOR_CLOSE:
-					System.out.println("cmd, CLOSE door");
-					elevators[currElev].close();
-					send = 0;
-					s_elevator = -1;		// elevator job open close
-					break;		//end DOOR_CLOSE
-				case STOP:
-					System.out.println("cmd, STOP");
-					elevators[currElev].direction = ElevatorDirection.E_HOLD;
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator STOPPED at " + elevators[currElev].getCurrentFloor());
-					send = 0;
-					break;		// end STOP
-				}// end CMD switch
-				
-				/*--- send ACK for CMD ---**/
-				sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
-				try {
-					sendSocket.send(sendAPacket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				    System.exit(1);
-				}
-				
+			while (keepMoving) {
+				elevator.direction = targetDir;	//move up
+				elevator.run();
+				sendPacket = createPacket(DATA, elevator.getCurrentFloor(), receivePacket.getPort());
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator moved " + dir + ", now at Floor " + elevator.getCurrentFloor());
+				send = 1;	// send elevator location				
 				/*--- send elevator location ---*/
 				if (send == 1) {
 					try {
-						sendSocket.send(sendPacket);
+						System.out.println(String.format("ELEVATOR %d: sending pos ( string >> %s, byte array >> %s ).", 
+								num_elevator, new String(sendPacket.getData()), sendPacket.getData()));
+						eSocket.send(sendPacket);
 					} catch (IOException e1) {
 						e1.printStackTrace();
 						System.exit(1);
 					}
 					send = 0;
 				}// end if (location update)
-				break;		// end CMD			
-			case ACK:
-				System.out.println("ack");
-				currElev = getElevNum(cmd[1]) - 1;
-				/*----- ACK packet received -----*/
-				switch (dataToStringArray(cmd[1])[0]) {
-				case UP_PICKUP:					
-					elevators[currElev].direction = ElevatorDirection.E_UP;		// move up
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved UP, now at Floor " + elevators[currElev].getCurrentFloor());
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
-					s_elevator = 1;					
-					break;		// end UP_PICKUP
-				case DOWN_PICKUP:
-					elevators[currElev].direction = ElevatorDirection.E_DOWN;		// move down
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved DOWN, now at Floor " + elevators[currElev].getCurrentFloor());
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort()); 		
-					s_elevator = 1;
-					break;		// end DOWN_PICKUP
-				case UP_DROPOFF:
-					elevators[currElev].direction = ElevatorDirection.E_UP;	//move up
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved UP, now at Floor " + elevators[currElev].getCurrentFloor());
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					s_elevator = 0;
-					break;		// end UP_DROPOFF
-				case DOWN_DROPOFF:
-					elevators[currElev].direction = ElevatorDirection.E_DOWN;	//move down
-					elevators[currElev].run();
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved DOWN, now at Floor " + elevators[currElev].getCurrentFloor());
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					s_elevator = 0;		// elevator job drop off
-					break;		// end DOWN_DROPOFF
-				}// end CMD switch
-				
-				/*--- send elevator location message ---*/
-				try {
-					sendSocket.send(sendPacket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-					System.exit(1);
+				elevReceive(receivePacket);
+				data = packetToString(receivePacket.getData());
+				if (data[1].equals(STOP)) {
+					System.out.println("STOP, stopping elevator");
+					keepMoving = false;
+					stopOpenClose(receivePacket);
 				}
-				break;		// end ACK
-			
-			case DATA:
-				System.out.println("data");
-				/*----- DATA packet received -----*/
-				data = ins;
-				currElev = getElevNum(data[1]) - 1;
-				switch (dataToStringArray(cmd[1])[0]) {
-				case UP_PICKUP:
-					elevators[currElev].direction = ElevatorDirection.E_UP;	//move up
-					elevators[currElev].run();
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved UP, now at Floor " + elevators[currElev].getCurrentFloor());
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(dataToStringArray(data[1])[0]); 	// record elevator lamp
-					break;
-				case DOWN_PICKUP:
-					elevators[currElev].direction = ElevatorDirection.E_DOWN;	//move down
-					elevators[currElev].run();
-					sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved DOWN, now at Floor " + elevators[currElev].getCurrentFloor());
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(dataToStringArray(data[1])[0]); 	// record elevator lamp
-					break;
-				case STOP:
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(dataToStringArray(data[1])[0]); 	// record elevator lamp
-					if (num_lamp > (elevators[currElev].getIntFloor())) {
-						elevators[currElev].direction = ElevatorDirection.E_UP;	//move up
-						elevators[currElev].run();
-						sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-						System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator moved up, now at Floor " + elevators[currElev].getCurrentFloor());
-						s_elevator = 0;		// elevator job drop off
-						code = "0x32";
-					}else if (num_lamp < (elevators[currElev].getIntFloor())) {
-						elevators[currElev].direction = ElevatorDirection.E_DOWN;	//move down
-						elevators[currElev].run();
-						System.out.println("ELEVATOR " + elevators[currElev].getId() + ": Elevator move DOWN, now at Floor " + elevators[currElev].getCurrentFloor());
-						sendPacket = createPacket(DATA, elevators[currElev].getCurrentFloor(),receivePacket.getPort());
-						s_elevator = 0;		// elevator job drop off
-						code = "0x30";
-					}// end if elevator direction
-					break;				}// end CMD switch
-				/*--- send ACK message ---*/
-				sendAPacket = createPacket(ACK, dataToStringArray(data[1])[0], receivePacket.getPort());
-				try {
-					sendSocket.send(sendAPacket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				    System.exit(1);
+				else {
+					System.out.println("CONTINUE, elevator moving");
+					System.out.println(String.format("ELEVATOR %d: received cmd ( string >> %s, byte array >> %s ).", 
+							num_elevator, new String(receivePacket.getData()), receivePacket.getData()));
+//					System.out.printf("previous command received is: %s \n" , data[1]);
+//					sendAck(receivePacket, data);
 				}
-				/*--- send elevator location ---*/
-				try {
-					sendSocket.send(sendPacket);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-					System.exit(1);
-				}
-			}//end header switch
-		}//end while (true)
-	}// end control()
+			}
+		}
+	}
+	
+	public void elevStop(DatagramPacket receive) {
+		String[] ins = packetToString(receive.getData());
+		System.out.println("cmd, STOP");
+		elevator.direction = ElevatorDirection.E_HOLD;
+		elevator.run();
+		System.out.println("ELEVATOR " + num_elevator + ": Elevator STOPPED at " + elevator.getCurrentFloor());
+		sendAck(receive, ins);
+	}
+	
+	public void elevOpen(DatagramPacket receive) {
+		String[] ins = packetToString(receive.getData());
+		ins = packetToString(receive.getData());
+		System.out.println("cmd, OPEN door");
+		if (ins[1].equals(DOOR_OPEN)) elevator.open(num_elevator);
+		else System.out.println("Unable to open door");
+		
+		sendAck(receive, ins);
+	}
+	
+	public void elevClose(DatagramPacket receive) {
+		String[] ins = packetToString(receive.getData());
+		ins = packetToString(receive.getData());
+		System.out.println("cmd, CLOSE door");
+//		System.out.println("CLOSE door command is: " + ins[1]);
+		if (ins[1].equals(DOOR_CLOSE)) elevator.close(num_elevator);
+		else System.out.println("Unable to close door");
+		sendAck(receive, ins);
+	}
+	
+	// Use when CMD is received to stop
+	public void stopOpenClose(DatagramPacket receive) {
+//		String[] ins = packetToString(receive.getData());
+//		if (ins[1] == STOP)
+		elevStop(receive);
+		elevReceive(receive);
+		elevOpen(receive);
+		elevReceive(receive);
+		elevClose(receive);
+	}
+	
+	public void elevReceive(DatagramPacket receive) {
+		try {
+//			System.out.println("ELEVATOR " + num_elevator + ": Elevator Waiting ..."); // so we know we're waiting
+        	eSocket.receive(receive);
+        	System.out.print("ELEVATOR " + num_elevator + ": received ");
+	    } catch (IOException e) {
+    		System.out.print("ELEVATOR " + num_elevator + ": IO Exception: likely:");
+        	System.out.println("Receive Socket Timed Out.\n" + e);
+        	e.printStackTrace();
+        	System.exit(1);
+	    }
+	}
+
+	public void sendAck(DatagramPacket receive, String[] ins) {
+		sendAPacket = createPacket(ACK, ins[1], receive.getPort());
+		try {
+//        	System.out.println("ELEVATOR " + num_elevator + ": sending ack ");
+			System.out.println(String.format("ELEVATOR %d: sending ack ( string >> %s, byte array >> %s ).", 
+					num_elevator, new String(receive.getData()), receive.getData()));
+			eSocket.send(sendAPacket);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		    System.exit(1);
+		}
+	}
+	
+		
+//	/**
+//	 * function called in main to control corresponding elevator do the received request
+//	 */
+//	public void control() {
+//		byte _data[] = new byte[100];
+//		receivePacket = new DatagramPacket(_data, _data.length);
+//		String[] ins = packetToString(receivePacket.getData());
+//		String[] cmd = null;
+//		String[] data = null;	
+//		
+//		while(true) {
+//			try {
+//					System.out.println("ELEVATOR " + num_elevator + ": Elevator Waiting ..."); // so we know we're waiting
+//		        	eSocket.receive(receivePacket);
+//		        	System.out.print("ELEVATOR " + num_elevator + ": received ");
+//		    	} catch (IOException e) {
+//		    		System.out.print("ELEVATOR " + num_elevator + ": IO Exception: likely:");
+//		        	System.out.println("Receive Socket Timed Out.\n" + e);
+//		        	e.printStackTrace();
+//		        	System.exit(1);
+//		    	}
+//			
+//			ins = packetToString(receivePacket.getData());
+//			
+//			switch (ins[0]) {
+//			case CMD:
+//				/*====== CMD packet received ======*/
+//				cmd = ins;
+//				
+//				switch (cmd[1]) {
+//				/*--- cases for different CMD code ---**/
+//				case UP_DROPOFF:
+//					System.out.println("cmd, UP for drop off");
+//					elevator.direction = ElevatorDirection.E_UP;	//move up
+//					elevator.run();
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved up, now at Floor " + elevator.getCurrentFloor());
+//					send = 1;	// send elevator location
+//					s_elevator = 0;		// elevator job drop off
+//					break;		// end UP_DROPOFF				
+//
+//				case UP_PICKUP:	
+//					System.out.println("cmd, UP for pick up");
+//					System.out.println("ELEVATOR " + num_elevator + ": wait for elevator data ");
+//					s_elevator = 1;		// elevator job pick up
+//					send = 0;
+//					break;		// end UP_PICKUP
+//
+//				case DOWN_DROPOFF:
+//					System.out.println("cmd, DOWN for drop off");
+//					elevator.direction = ElevatorDirection.E_DOWN;	//move down
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ": Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					send = 1;	// send elevator location
+//					s_elevator = 0;		// elevator job drop off
+//					break;		// end DOWN_DROPOFF
+//
+//				case DOWN_PICKUP:
+//					System.out.println("cmd, UP for drop off");
+//					System.out.println("ELEVATOR " + num_elevator + ": wait for elevator data ");
+//					s_elevator = 1;		// elevator job pick up
+//					send = 0;
+//					break;		// end DOWN_PICKUP
+//
+//				case DOOR_OPEN:	
+//					System.out.println("cmd, OPEN door");
+//					elevator.open(num_elevator);
+//					send = 0;
+//					if (s_elevator != -1) {
+//						if (s_elevator == 1) {
+//							/*--- door open for pick up, elevator lamp ON ---*/
+//							elevator.Lamp[num_lamp-1] = s_elevator;
+//							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
+//						}else if (s_elevator == 0) {
+//							/*--- door open for drop off, elevator lamp OFF ---*/
+//							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
+//							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
+//						}else {
+//							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
+//						}
+//						s_elevator = -1;		// elevator job open door
+//					}// end if not -1
+//					break;		// end DOOR_OPEN				
+//
+//				case DOOR_CLOSE:
+//					System.out.println("cmd, CLOSE door");
+//					elevator.close(num_elevator);
+//					send = 0;
+//					s_elevator = -1;		// elevator job open close
+//					break;		//end DOOR_CLOSE
+//
+//				case STOP:
+//					System.out.println("cmd, STOP");
+//					elevator.direction = ElevatorDirection.E_HOLD;
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator STOPPED at " + elevator.getCurrentFloor());
+//					send = 0;
+//					break;		// end STOP
+//
+//				}// end CMD switch
+//				
+//				/*--- send ACK for CMD ---**/
+//				sendAPacket= createPacket(ACK, ins[1], receivePacket.getPort());
+//				try {
+//					eSocket.send(sendAPacket);
+//				} catch (IOException e1) {
+//					e1.printStackTrace();
+//				    System.exit(1);
+//				}
+//				
+//				/*--- send elevator location ---*/
+//				if (send == 1) {
+//					try {
+//						eSocket.send(sendPacket);
+//					} catch (IOException e1) {
+//						e1.printStackTrace();
+//						System.exit(1);
+//					}
+//					send = 0;
+//				}// end if (location update)
+//				break;		// end CMD			
+//
+//			case ACK:
+//				System.out.println("ack");
+//				/*----- ACK packet received -----*/
+//				switch (cmd[1]) {
+//				case UP_PICKUP:	
+//					elevator.direction = ElevatorDirection.E_UP;		// move up
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
+//					s_elevator = 1;				
+//					break;		// end UP_PICKUP
+//
+//				case DOWN_PICKUP:
+//					elevator.direction = ElevatorDirection.E_DOWN;		// move down
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 
+//					s_elevator = 1;
+//					break;		// end DOWN_PICKUP
+//
+//				case UP_DROPOFF:
+//					elevator.direction = ElevatorDirection.E_UP;	//move up
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					s_elevator = 0;
+//					break;		// end UP_DROPOFF
+//
+//				case DOWN_DROPOFF:
+//					elevator.direction = ElevatorDirection.E_DOWN;	//move down
+//					elevator.run();
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					s_elevator = 0;		// elevator job drop off
+//					break;		// end DOWN_DROPOFF
+//				}// end CMD switch
+//				
+//				/*--- send elevator location message ---*/
+//				try {
+//					eSocket.send(sendPacket);
+//				} catch (IOException e1) {
+//					e1.printStackTrace();
+//					System.exit(1);
+//				}
+//				break;		// end ACK
+//			
+//			case DATA:
+//				System.out.println("data");
+//				/*----- DATA packet received -----*/
+//				data = ins;
+//				switch (cmd[1]) {
+//				case UP_PICKUP:
+//					elevator.direction = ElevatorDirection.E_UP;	//move up
+//					elevator.run();
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+//					s_elevator = 1;		// elevator job pick up
+//					num_lamp = toInt(data[1]); 	// record elevator lamp
+//					send = 1;
+//					break;
+//
+//				case DOWN_PICKUP:
+//					elevator.direction = ElevatorDirection.E_DOWN;	//move down
+//					elevator.run();
+//					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
+//					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+//					s_elevator = 1;		// elevator job pick up
+//					num_lamp = toInt(data[1]); 	// record elevator lamp
+//					send = 1;
+//					break;
+//
+//				case STOP:
+//					s_elevator = 1;		// elevator job pick up
+//					num_lamp = toInt(data[1]); 	// record elevator lamp
+//					send = 0;
+//					break;				}// end CMD switch
+//					
+//				/*--- send ACK message ---*/
+//				sendAPacket = createPacket(ACK, data[1], receivePacket.getPort());
+//				try {
+//					eSocket.send(sendAPacket);
+//				} catch (IOException e1) {
+//					e1.printStackTrace();
+//				    System.exit(1);
+//				}
+//				/*--- send elevator location ---*/
+//				if (send == 1) {
+//					try {
+//						eSocket.send(sendPacket);
+//					} catch (IOException e1) {
+//						e1.printStackTrace();
+//						System.exit(1);
+//					}
+//				}// end update location
+//			}//end header switch
+//		}//end while (true)
+//	}// end control()
 	
 	/**
 	 *  main function of the ElevatorControl class 
 	 */
 	public static void main(String[] args) {
-//		ElevatorControl Elv_1 = new ElevatorControl(3137, 1, "1");
-//		ElevatorControl Elv_2 = new ElevatorControl(3237, 2, "1");
-//		ElevatorControl Elv_3 = new ElevatorControl(3337, 3, "10");
-//		ElevatorControl Elv_4 = new ElevatorControl(3437, 4, "20");
-//		Elv_1.control();
-//		Elv_2.control();
-//		Elv_3.control();
-//		Elv_4.control();
-//		Elevator elevator2 = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl);
-//		Elevator elevator3 = new Elevator("10", ElevatorDirection.E_HOLD, elevatorControl);
-//		Elevator elevator4 = new Elevator("20", ElevatorDirection.E_HOLD, elevatorControl);
-		ElevatorControl elevatorControl = new ElevatorControl(elevators);
-		elevators = new Elevator[4];
-		elevators[0] = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl, 1);
-		elevators[1] = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl, 2);
-		elevators[2] = new Elevator("10", ElevatorDirection.E_HOLD, elevatorControl, 3);
-		elevators[3] = new Elevator("20", ElevatorDirection.E_HOLD, elevatorControl, 4);
-		elevatorControl.control();
-//			{ elevator1 = new Elevator("1", ElevatorDirection.E_HOLD, elevatorControl),
-//						elevator2, elevator3, elevator4 };
-//		elevator1.run();
-//		elevator2.run();
-//		elevator3.run();
-//		elevator4.run();
+		Elv_1 = new ElevatorControl(3137, 1, "1");
+		Elv_2 = new ElevatorControl(3237, 2, "1");
+		Elv_3 = new ElevatorControl(3337, 3, "10");
+		Elv_4 = new ElevatorControl(3437, 4, "20");
+		
+		Elv_1.start();
+		Elv_2.start();
+		Elv_3.start();
+		Elv_4.start();
 
 	}// end main	
+
 }// end class

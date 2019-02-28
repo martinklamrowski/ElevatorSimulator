@@ -11,6 +11,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import FloorSystem.FloorSubsystem.Direction;
+
+/**
+ * This class is used to handle an input file filled with elevator requests.
+ * The requests are placed into an array, and sent to the Scheduler based on the request timestamp
+ * 
+ * @author Sunjay Panesar
+ */
+
 public class UserInputHandler implements Runnable {
 
 	DatagramSocket requestSocket;
@@ -20,7 +28,6 @@ public class UserInputHandler implements Runnable {
 	FloorSubsystem fs;
 	
 	public UserInputHandler(FloorSubsystem floorSubsystem) {
-		
 		fs = floorSubsystem;
         try {
         	requestSocket = new DatagramSocket();
@@ -33,7 +40,7 @@ public class UserInputHandler implements Runnable {
 	/**
 	 * Take a flat file and parse lines of text for requests in the following form: 
 	 * "XX:XX:XX.XXX X DIRECTION X"
-	 * @param filePath
+	 * @param filePath, list
 	 * 
 	 */
 	public void parseInputFile(String filePath, ArrayList<String> list) throws FileNotFoundException, IOException {
@@ -53,6 +60,13 @@ public class UserInputHandler implements Runnable {
 		br.close();
 	}
 	
+	/**
+	 * Take a list of service request strings and separate each entry into variables, then
+	 * send the requests, waiting the appropriate amount of time between each request
+	 * 
+	 * @param list
+	 * 
+	 */
 	public void parseServiceReqs(ArrayList<String> list) {
 		int hour = 0;
 		int min = 0;
@@ -64,7 +78,8 @@ public class UserInputHandler implements Runnable {
 		int startFloor = 0;
 		int destFloor = 0;
 		Direction targetDirection = Direction.IDLE;
-//			Parse the previously generated list and separate each line into variables
+
+//		Parse the previously generated list and separate each line into variables
 		for (String s : list) {
 			String data[] = s.split(" ");
 			String time[] = data[0].split("[:.]");
@@ -109,8 +124,15 @@ public class UserInputHandler implements Runnable {
 			}
 		}
 	}
+
 	
-	
+	/**
+	 * Takes the input string formatted as "XX:XX:XX.XXX X DIRECTION X" and places int and Direction enum
+	 * parameters into data object. Time is in values data[0] to data[3], start floor is in data[4],
+	 * direction is in data[5], and destination floor is in data[6]
+	 * @param s
+	 * @return data
+	 */
 	public void run() {
 
 		try {

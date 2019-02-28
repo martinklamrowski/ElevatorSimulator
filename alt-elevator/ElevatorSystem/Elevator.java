@@ -8,17 +8,18 @@ package ElevatorSystem;
 public class Elevator implements Runnable {
 	public String currentFloor;
 	public ElevatorDirection direction;
+	int[] Lamp = new int[MAX_FLOOR];
 	//public boolean _exit = false;
 	private static final int MAX_FLOOR = 22;		// maximum floor number
-	private int id;
 
-	ElevatorControl ec;
-	
-	public Elevator(String currentFloor, ElevatorDirection direction, ElevatorControl elevatorControl, int idNo) {
-		ec = elevatorControl;
-		id = idNo;
+	public Elevator(String currentFloor, ElevatorDirection direction) {
 		this.currentFloor = currentFloor;
 		this.direction = direction;
+		
+		/*--- INITILIZE Elevator Lamp ---*/
+		for(int i =0; i<MAX_FLOOR; i++) {
+			Lamp[i] = 0;
+		}
 		
 	}
 	 	
@@ -57,6 +58,7 @@ public class Elevator implements Runnable {
 	        this.currentFloor = Integer.toString(pos);
 	        // send pos
 	    } else if ( direction == ElevatorDirection.E_HOLD) {
+//	    	Put sleep here?
 	    	this.currentFloor = this.getCurrentFloor();
 	    }else {
 	    	System.out.println("ELEVATOR: ERROR elevator direction");
@@ -84,10 +86,6 @@ public class Elevator implements Runnable {
 		}	
 		return pos;
 	}
-	
-	public int getId() {
-		return id;
-	}
 
 	/**
 	 * return the current direction of elevator
@@ -113,8 +111,9 @@ public class Elevator implements Runnable {
 	
 	/**
 	 * open the door of the elevator
+	 * @param num_elevator 
 	 */
-	public void open() {
+	public void open(int num_elevator) {
 		// wait 2 seconds and open door
 		try {
 			Thread.sleep(2000);
@@ -122,13 +121,13 @@ public class Elevator implements Runnable {
 		    	e.printStackTrace();
 		    	System.exit(1);
 		}
-		System.out.println("ELEVATOR " + id + ": Door OPENED at " + this.getCurrentFloor());
+		System.out.println("ELEVATOR " + num_elevator + ": Door OPENED at " + this.getCurrentFloor());
 	}
 	
 	/**
 	 * close elevator door
 	 */
-	public void close() {
+	public void close(int num_elevator) {
 		// wait 2 seconds and close door
 		try {
 			Thread.sleep(2000);
@@ -137,7 +136,7 @@ public class Elevator implements Runnable {
 		    	System.exit(1);
 		}
 
-		System.out.println("ELEVATOR " + id + ": Door CLOSED at " + this.getCurrentFloor());
+		System.out.println("ELEVATOR " + num_elevator + ": Door CLOSED at " + this.getCurrentFloor());
 	}
 	
 
