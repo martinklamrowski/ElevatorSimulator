@@ -605,7 +605,7 @@ class ElevatorHandler extends Thread {
 						keepMoving = false;
 						targetDest = Integer.parseInt(v[0]);
 						pickupQ.remove(k);
-						System.out.printf("sub-%d: removed %d from pickup list\n", this.id, currentFloor);
+						System.out.printf("sub-%d: removed %d from pickup list\n", this.id, k);
 					}
 				});
 				
@@ -621,7 +621,7 @@ class ElevatorHandler extends Thread {
 				}
 				if (floorToRemove > 0) {
 					dropoffQ.remove((Object) currentFloor);
-					System.out.printf("sub-%d: removed %d from pickup list\n", this.id, currentFloor);
+					System.out.printf("sub-%d: removed %d from dropoff list\n", this.id, currentFloor);
 					if (dropoffQ.isEmpty()) {
 //						 GOIDLE after STOPOPENCLOSE
 						newCommand = Scheduler.GO_IDLE;
