@@ -264,7 +264,7 @@ public class Scheduler {
 			}
 			// request is below and request direction is NOT the same as elevator direction
 			else if (distance > 0 && !requestedDir.equals(currentElevatorDir)) {
-				calculated = n + 1 - distance;
+				calculated = 1 - distance;
 			}
 		}
 		// current direction of elevator is UP
@@ -281,7 +281,7 @@ public class Scheduler {
 			// request is above an request direction is NOT the same as elevator direction
 			else if (distance < 0 && !requestedDir.equals(currentElevatorDir)) {
 				distance = Math.abs(distance);
-				calculated = n + 1 - distance;
+				calculated = 1 - distance;
 			}
 		}
 		return calculated; // return calculated suitability
@@ -478,10 +478,10 @@ class ElevatorHandler extends Thread {
 			if (!newCommand.equals("")) {
 				System.out.println(String.format("sub-%d: newCommand is: %s", this.id, newCommand));
 				ins = newCommand;
+				newCommand = "";
 				if (ins == Scheduler.UP_PICKUP || ins == Scheduler.UP_DROPOFF) currentDirection = "UP";
 				if (ins == Scheduler.DOWN_PICKUP || ins == Scheduler.DOWN_DROPOFF) currentDirection = "DOWN";
 				moving(ins, Integer.toString(targetDest));
-				newCommand = "";
 			}
 		
 			
@@ -553,6 +553,7 @@ class ElevatorHandler extends Thread {
 		try {
 			if (ins.equals(Scheduler.UP_DROPOFF) || ins.equals(Scheduler.DOWN_DROPOFF)) {
 				dropoffQ.remove((Object) currentFloor);
+			System.out.printf("sub-%d: removed %d from dropoff list\n", this.id, currentFloor);
 			}
 			
 			// send cmd
@@ -567,7 +568,8 @@ class ElevatorHandler extends Thread {
 			System.out.println(Arrays.toString(aPacketParsed));
 			
 			if (ins.equals(Scheduler.UP_PICKUP) || ins.equals(Scheduler.DOWN_PICKUP)) {
-				
+
+				System.out.printf("\nsub-%d: removed %d from pickup list\n", this.id, currentFloor);
 				pickupQ.remove((Object) currentFloor);
 				
 				// send elevator destination
