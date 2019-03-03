@@ -52,13 +52,13 @@ public class Scheduler {
 	/* ## ELEVATOR SYSTEM CONSTITUENTS ## */
 	public static final int FLOORS = 22;									// floors are 1-22
 	private BlockingQueue<String> upQ1;										// queue with up requests (elevator 1)
-	private BlockingQueue<String> downQ1;									// queue with down requests (elevator 1)
+	private BlockingQueue<String> serviceQ1;									// queue with down requests (elevator 1)
 	private BlockingQueue<String> upQ2;										// queue with up requests (elevator 2)
-	private BlockingQueue<String> downQ2;									// queue with down requests (elevator 2)
+	private BlockingQueue<String> serviceQ2;									// queue with down requests (elevator 2)
 	private BlockingQueue<String> upQ3;										// queue with up requests (elevator 3)
-	private BlockingQueue<String> downQ3;									// queue with down requests (elevator 3)
+	private BlockingQueue<String> serviceQ3;									// queue with down requests (elevator 3)
 	private BlockingQueue<String> upQ4;										// queue with up requests (elevator 4)
-	private BlockingQueue<String> downQ4;									// queue with down requests (elevator 4)
+	private BlockingQueue<String> serviceQ4;									// queue with down requests (elevator 4)
 	
 	// objects performing elevator movement calculations for each elevator in separate thread
 	private ElevatorHandler handler1;
@@ -81,14 +81,10 @@ public class Scheduler {
 			System.exit(1);
 		}
 		
-		upQ1 = new ArrayBlockingQueue<String>(100);
-		downQ1 = new ArrayBlockingQueue<String>(100);
-		upQ2 = new ArrayBlockingQueue<String>(100);
-		downQ2 = new ArrayBlockingQueue<String>(100);
-		upQ3 = new ArrayBlockingQueue<String>(100);
-		downQ3 = new ArrayBlockingQueue<String>(100);
-		upQ4 = new ArrayBlockingQueue<String>(100);
-		downQ4 = new ArrayBlockingQueue<String>(100);
+		serviceQ1 = new ArrayBlockingQueue<String>(100);
+		serviceQ2 = new ArrayBlockingQueue<String>(100);
+		serviceQ3 = new ArrayBlockingQueue<String>(100);
+		serviceQ4 = new ArrayBlockingQueue<String>(100);
 
 		Map<Integer,String[]> pupQ1 = new ConcurrentHashMap<Integer,String[]>();
 		ArrayList<Integer> doffQ1 = new ArrayList<Integer>();
@@ -99,10 +95,10 @@ public class Scheduler {
 		Map<Integer,String[]> pupQ4 = new ConcurrentHashMap<Integer,String[]>();
 		ArrayList<Integer> doffQ4 = new ArrayList<Integer>();
 		
-		handler1 = new ElevatorHandler(EPORT1, FPORT, upQ1, downQ1, pupQ1, doffQ1, 1, "IDLE", 1);
-		handler2 = new ElevatorHandler(EPORT2, FPORT, upQ2, downQ2, pupQ2, doffQ2, 1, "IDLE", 2);
-		handler3 = new ElevatorHandler(EPORT3, FPORT, upQ3, downQ3, pupQ3, doffQ3, 10, "IDLE", 3);
-		handler4 = new ElevatorHandler(EPORT4, FPORT, upQ4, downQ4, pupQ4, doffQ4, 20, "IDLE", 4);
+		handler1 = new ElevatorHandler(EPORT1, FPORT, serviceQ1, pupQ1, doffQ1, 1, "IDLE", 1);
+		handler2 = new ElevatorHandler(EPORT2, FPORT, serviceQ2, pupQ2, doffQ2, 1, "IDLE", 2);
+		handler3 = new ElevatorHandler(EPORT3, FPORT, serviceQ3, pupQ3, doffQ3, 10, "IDLE", 3);
+		handler4 = new ElevatorHandler(EPORT4, FPORT, serviceQ4, pupQ4, doffQ4, 20, "IDLE", 4);
 	}
 	
 	
@@ -195,41 +191,38 @@ public class Scheduler {
 					int maxFS = Math.max(Math.max(FS1, FS2), Math.max(FS3, FS4));
 					
 					if (maxFS == FS1) {
-//						if (temp[2].equals("UP")) {
-//							upQ1.add(dPacketParsed[1]);
+						System.out.println("main: giving service request to sub-1");
+//						synchronized (handler1) {
+//							handler1.notifyAll();
 //						}
-//						else {
-//							downQ1.add(dPacketParsed[1]);
-//						}		
-						downQ1.add(dPacketParsed[1]);				
+						serviceQ1.add(dPacketParsed[1]);	
 					}
 					else if (maxFS == FS2) {
-//						if (temp[2].equals("UP")) {
-//							upQ2.add(dPacketParsed[1]);
+						//notifyAll();
+//						synchronized (handler2) {
+//							handler2.notifyAll();
 //						}
-//						else {
-//							downQ2.add(dPacketParsed[1]);
-//						}						
-						downQ2.add(dPacketParsed[1]);
+						System.out.println("main: giving service request to sub-2");
+						serviceQ2.add(dPacketParsed[1]);
 					}
 					else if (maxFS == FS3) {
-//						if (temp[2].equals("UP")) {
-//							upQ3.add(dPacketParsed[1]);
+						//notifyAll();
+//						synchronized (handler3) {
+//							handler3.notifyAll();
 //						}
-//						else {
-//							downQ3.add(dPacketParsed[1]);
-//						}				
-						downQ3.add(dPacketParsed[1]);		
+						System.out.println("main: giving service request to sub-3");
+						serviceQ3.add(dPacketParsed[1]);		
 					}
 					else {
-//						if (temp[2].equals("UP")) {
-//							upQ4.add(dPacketParsed[1]);
-//						}s
-//						else {
-//							downQ4.add(dPacketParsed[1]);
-//						}				
-						downQ4.add(dPacketParsed[1]);		
-					}				
+						//notifyAll();
+//						synchronized (handler4) {
+//							handler4.notifyAll();
+//						}
+						System.out.println("main: giving service request to sub-4");
+						serviceQ4.add(dPacketParsed[1]);						
+					}
+
+
 				}
 			}
 			catch (Exception e) {
@@ -373,12 +366,9 @@ class ElevatorHandler extends Thread {
 	private DatagramSocket eSocket;					// socket to communicate with elevator system
 	private int eport;								// port of elevator system
 	private int fport;								// port of floor system
-	private BlockingQueue<String> upQ;				// queue with up requests
-	private BlockingQueue<String> downQ;			// queue with down requests
-//	private Map<Integer,String[]> pickupQ = new HashMap<Integer,String[]>();
-//	private ArrayList<Integer> dropoffQ = new ArrayList<Integer>();
-	private Map<Integer,String[]> pickupQ;
-	private ArrayList<Integer> dropoffQ;
+	private BlockingQueue<String> serviceQ;			// queue with requests
+	private Map<Integer,String[]> pickupQ;			// pickup queue containing Integer start floor key, and string array holding destination and direction
+	private ArrayList<Integer> dropoffQ;			// dropoff queue containing Integer destination floors
 	private String newCommand = "";
 	private int targetSrc;
 	private int targetDest;
@@ -398,17 +388,16 @@ class ElevatorHandler extends Thread {
 	 * @param port
 	 * @param packet
 	 * @param upQ
-	 * @param downQ
+	 * @param serviceQ
 	 */
-	public ElevatorHandler(int eport, int fport, BlockingQueue<String> upQ, BlockingQueue<String> downQ, 
+	public ElevatorHandler(int eport, int fport, BlockingQueue<String> serviceQ, 
 			Map<Integer,String[]> pupQ, ArrayList<Integer> doffQ, int currentFloor, String currentDirection, int id) {
 		super("request thread");
 		try {
 			eSocket = new DatagramSocket();
 			this.eport = eport;
 			this.fport = fport;
-			this.upQ = upQ;
-			this.downQ = downQ;
+			this.serviceQ = serviceQ;
 			this.pickupQ = pupQ;
 			this.dropoffQ = doffQ;
 			this.currentDirection = currentDirection;
@@ -426,7 +415,7 @@ class ElevatorHandler extends Thread {
 	 * Main thread process. Executed on thread start.
 	 */
 	@Override
-	public void run() {
+	public synchronized void run() {
 		
 		boolean running = true;
 		String ins;
@@ -435,87 +424,107 @@ class ElevatorHandler extends Thread {
 		String direction = "";
 		String[] parsedData;
 		System.out.println("sub: a new thread is running.");	
-				
+//		try {
+//			wait();
+//		} catch (InterruptedException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 		while (running) {
 
-//			System.out.println("Hi " + newCommand);
-//			String uq = upQ.poll();
-			String request = downQ.poll();
-//			String request = (dq == null) ? uq : dq;			
-			
+			String request = serviceQ.peek();		
+
+			/*
+			 *  determining which way the elevator needs to go to pickup and dropoff
+			 *	DATA packet format: '\3\"time src_floor direction dest_floor"\'
+			 *	
+			 *	if elevator is below src_floor - need to move elevator up
+			 *	if elevator is above src_floor - need to move elevator down 
+			 *
+			 *	if dest_floor > src_floor - go up after pickup
+			 *	if dest_floor < src_floor - go down after pickup
+			 */		
 			if (request != null) {
+				serviceQ.poll();
 				parsedData = request.split(" ");
 				srcFloor = parsedData[1];
 				destFloor = parsedData[3];
-				direction = parsedData[2];
-			}
+				direction = parsedData[2];			
+				if (dropoffQ.isEmpty()) {
+					System.out.printf("Parsed start = %s, dest = %s, and dir = %s \n", srcFloor, destFloor, direction);
 
-				/*
-				 *  determining which way the elevator needs to go to pickup and dropoff
-				 *	DATA packet format: '\3\"time src_floor direction dest_floor"\'
-				 *	
-				 *	if elevator is below src_floor - need to move elevator up
-				 *	if elevator is above src_floor - need to move elevator down 
-				 *
-				 *	if dest_floor > src_floor - go up after pickup
-				 *	if dest_floor < src_floor - go down after pickup
-				 */				
-				
-			if (dropoffQ.isEmpty() && !srcFloor.equals("")) {
-				System.out.printf("Parsed start = %s, dest = %s, and dir = %s \n", srcFloor, destFloor, direction);
-
-				if (Integer.parseInt(srcFloor) > currentFloor) {
-					ins = Scheduler.UP_MOVE;
-					currentDirection = "UP";
+					if (Integer.parseInt(srcFloor) > currentFloor) {
+						ins = Scheduler.UP_MOVE;
+						currentDirection = "UP";
+					}
+					else if (Integer.parseInt(srcFloor) < currentFloor) {
+						ins = Scheduler.DOWN_MOVE;
+						currentDirection = "DOWN";
+					}				
+					else {
+						ins = Scheduler.STOP;	// elevator is already there
+						if (direction.equals("UP")) newCommand = Scheduler.UP_PICKUP;
+						if (direction.equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
+						targetDest = Integer.parseInt(destFloor);
+					}
+					String[] destAndDir = { destFloor, direction };
+					pickupQ.put(Integer.parseInt(srcFloor), destAndDir);
+					dropoffQ.add(Integer.parseInt(destFloor));
+					moving(ins, destFloor);
 				}
-				else if (Integer.parseInt(srcFloor) < currentFloor) {
-					ins = Scheduler.DOWN_MOVE;
-					currentDirection = "DOWN";
-				}				
-				else {
-					ins = Scheduler.STOP;	// elevator is already there
-					if (direction.equals("UP")) newCommand = Scheduler.UP_PICKUP;
-					if (direction.equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
-					targetDest = Integer.parseInt(destFloor);
-				}
-				String[] destAndDir = { destFloor, direction };
-				pickupQ.put(Integer.parseInt(srcFloor), destAndDir);
-				dropoffQ.add(Integer.parseInt(destFloor));
-				moving(ins, destFloor);
-			}
-			if (!pickupQ.isEmpty()) {
-				pickupQ.forEach((k, v) -> {
-					srcFloorsDiff.add(Scheduler.calculateSuitability(Scheduler.FLOORS, k, currentFloor, currentDirection, v[1]));
-					srcFloors.add(k);
-				});
-				targetSrc = srcFloors.get(srcFloorsDiff.indexOf(Collections.max(srcFloorsDiff)));
-				srcFloorsDiff.clear();
-				srcFloors.clear();
-//				pickupQ.get(targetSrc);
-				if (targetSrc > currentFloor) {
-					ins = Scheduler.UP_MOVE;
-					currentDirection = "UP";
-				}
-				else if (targetSrc < currentFloor) {
-					ins = Scheduler.DOWN_MOVE;
-					currentDirection = "DOWN";
-				}				
-				else {
-					ins = Scheduler.STOP;	// elevator is already there
-					if (direction.equals("UP")) newCommand = Scheduler.UP_PICKUP;
-					if (direction.equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
-					targetDest = Integer.parseInt(pickupQ.get(targetSrc)[0]);
-				}
-				moving(ins, destFloor);
 			}
 			
-			if (newCommand != "") {
+//			If a new command has been marked for the next while loop, this code will be used
+			if (!newCommand.equals("")) {
+				System.out.println(String.format("sub-%d: newCommand is: %s", this.id, newCommand));
 				ins = newCommand;
 				if (ins == Scheduler.UP_PICKUP || ins == Scheduler.UP_DROPOFF) currentDirection = "UP";
 				if (ins == Scheduler.DOWN_PICKUP || ins == Scheduler.DOWN_DROPOFF) currentDirection = "DOWN";
 				moving(ins, Integer.toString(targetDest));
 				newCommand = "";
 			}
+		
+			
+			if (!pickupQ.isEmpty()) {
+				System.out.println(String.format("sub-%d: pickupQ not empty", this.id));
+//				Iterate over the pickup queue, placing difference scores in srcFloorsDiff
+//				and their corresponding floors in srcFloors, in order to find the floor closest to elevator
+				pickupQ.forEach((k, v) -> {
+					System.out.println(String.format("sub-%d: pickupQ floor: %d", this.id, k));
+					srcFloorsDiff.add(Scheduler.calculateSuitability(Scheduler.FLOORS, k, currentFloor, currentDirection, v[1]));
+					srcFloors.add(k);
+				});
+				// targetSrc is assigned the floor value closest to the elevator
+				targetSrc = srcFloors.get(srcFloorsDiff.indexOf(Collections.max(srcFloorsDiff)));
+				srcFloorsDiff.clear();
+				srcFloors.clear();
+//				If closest floor is above elevator instruct to move up, if below move down
+//				Otherwise the elevator is at the floor, so send up or down pickup
+				if (targetSrc > currentFloor) {
+					newCommand = Scheduler.UP_MOVE;
+					currentDirection = "UP";
+				}
+				else if (targetSrc < currentFloor) {
+					newCommand = Scheduler.DOWN_MOVE;
+					currentDirection = "DOWN";
+				}				
+				else {
+//					newCommand = Scheduler.STOP;	// elevator is already there
+					if (pickupQ.get(targetSrc)[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
+					if (pickupQ.get(targetSrc)[1].equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
+					targetDest = Integer.parseInt(pickupQ.get(targetSrc)[0]);
+				}
+			}
+			
+////			If there are no more pickups or dropoffs, wait until Scheduler sends notify() and new service request
+//			if (newCommand.equals(Scheduler.GO_IDLE)) {
+//				try {
+//					wait();
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//				newCommand = "";
+//			}
 			
 		}			
 		eSocket.close();
@@ -525,7 +534,7 @@ class ElevatorHandler extends Thread {
 	
 	public void moving(String ins, String destFloor) {
 		String[] parsedData;
-		keepMoving = (ins == Scheduler.STOP ? false : true); // if the elevator is already there no need for positional updates
+		keepMoving = (ins == Scheduler.STOP || ins == Scheduler.GO_IDLE ? false : true); // if the elevator is already there no need for positional updates
 		
 		String newRequest = "";	
 		String[] newParsedData;
@@ -586,7 +595,7 @@ class ElevatorHandler extends Thread {
 //				checks if service is in queue, if so pop and add to start/dest lists
 //				checks if current floor is in dropoff list each time
 //				String uq = upQ.poll();
-				String request = downQ.poll();
+				String request = serviceQ.poll();
 //				String request = (dq == null) ? uq : dq;	
 				if (request != null) {
 					newRequest = request;	
@@ -596,8 +605,9 @@ class ElevatorHandler extends Thread {
 					pickupQ.put(Integer.parseInt(newParsedData[1]), destAndDir);
 					dropoffQ.add(Integer.parseInt(newParsedData[3]));
 				}
-				System.out.printf("sub-%d: checking pickupQ \n", this.id);
+				System.out.printf("sub-%d: checking pickupQ - current floors: ", this.id);
 				pickupQ.forEach((k, v) -> {
+					System.out.printf("%d ", k);
 					if (k == currentFloor) {
 //						Handle intermediate pickup by sending UPPICKUP or DOWNPICKUP after STOPOPENCLOSE
 						if (v[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
@@ -605,12 +615,15 @@ class ElevatorHandler extends Thread {
 						keepMoving = false;
 						targetDest = Integer.parseInt(v[0]);
 						pickupQ.remove(k);
-						System.out.printf("sub-%d: removed %d from pickup list\n", this.id, k);
+						System.out.printf("\nsub-%d: removed %d from pickup list\n", this.id, k);
 					}
 				});
+				System.out.println();
 				
 				int floorToRemove = 0;
+				System.out.printf("sub-%d: checking dropoffQ - current floors: ", this.id);
 				for (Integer d : dropoffQ) {
+					System.out.printf("%d ", d);
 					if (d == currentFloor) {
 //						Handle intermediate dropoff by sending UPDROPOFF or DOWNDROPOFF after STOPOPENCLOSE
 						if (currentDirection.equals("UP")) newCommand = Scheduler.UP_DROPOFF;
@@ -619,6 +632,8 @@ class ElevatorHandler extends Thread {
 						floorToRemove = d;
 					}
 				}
+				System.out.println();
+				
 				if (floorToRemove > 0) {
 					dropoffQ.remove((Object) currentFloor);
 					System.out.printf("sub-%d: removed %d from dropoff list\n", this.id, currentFloor);
