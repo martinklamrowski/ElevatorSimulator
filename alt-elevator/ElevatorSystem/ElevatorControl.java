@@ -179,12 +179,13 @@ public class ElevatorControl extends Thread{
 				break;
 			case GO_IDLE: 
 				targetDir = ElevatorDirection.E_HOLD;
+				elevator.direction = ElevatorDirection.E_HOLD;
 				dir = "DOWN";
 				action = "dropped off";
 				droppedOff = true;
 				//		Something to turn current floor lamp off
 				elevator.Lamp[elevator.getIntFloor() - 1] = 0;
-				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF and stopping at " + elevator.getIntFloor());
+				System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF and going idle at " + elevator.getIntFloor());
 				sendAck(receivePacket, ins);
 				break;
 			case UP_PICKUP: 
@@ -206,7 +207,7 @@ public class ElevatorControl extends Thread{
 				break;
 			case DOWN_PICKUP: 
 				targetDir = ElevatorDirection.E_DOWN;
-				dir = "UP";
+				dir = "DOWN";
 				action = "picked up";
 				keepMoving = true;
 				sendAck(receivePacket, ins);
@@ -557,7 +558,7 @@ public class ElevatorControl extends Thread{
 	 */
 	public static void main(String[] args) {
 		Elv_1 = new ElevatorControl(3137, 1, "1");
-		Elv_2 = new ElevatorControl(3237, 2, "1");
+		Elv_2 = new ElevatorControl(3237, 2, "10");
 		Elv_3 = new ElevatorControl(3337, 3, "10");
 		Elv_4 = new ElevatorControl(3437, 4, "20");
 		
