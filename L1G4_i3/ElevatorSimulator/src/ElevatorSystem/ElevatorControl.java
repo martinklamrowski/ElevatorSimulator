@@ -11,10 +11,12 @@ import java.net.UnknownHostException;
 /**
  * this is the function where receive request from scheduler and control corresponding elevator to do the request
  * @author ariannashi
+ * @coauthor Angie Byun
  *
  */
 public class ElevatorControl extends Thread{
 	/* ## HEADER AND COMMAND IDENTIFIERS ## */
+	private static final String ERROR = "0";
 	private static final String ACK = "1";
 	private static final String CMD = "2";
 	private static final String DATA = "3";	
@@ -82,7 +84,9 @@ public class ElevatorControl extends Thread{
 			data = "\0" + CMD + "\0" + code + "\0";
 		} else if (packetType.equals("3")) {				//CMD
 			data = "\0" + DATA + "\0" + code + "\0";
-		} 
+		} else if (packetType.equals("0")) {
+			data = "\0" + ERROR + "\0" + code + "\0"; // ERROR
+		}
 
 		try {			
 			packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), port);
@@ -199,8 +203,18 @@ public class ElevatorControl extends Thread{
 							/*--- door open for drop off, elevator lamp OFF ---*/
 							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
-						}else {
-							System.out.println("ELEVATOR " + num_elevator + ": ERROR elevator status");
+						}
+						else {
+							if (num_elevator == 3 && elevator.getCurrentFloor().equals(5)) {
+								try {
+									System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
+									Thread.sleep(10000);
+								}
+								catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						// ACK the error 	
 						}
 						s_elevator = -1;		// elevator job open door
 					}// end if not -1
@@ -279,6 +293,8 @@ public class ElevatorControl extends Thread{
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
+					
+				
 				}// end CMD switch
 				
 				/*--- send elevator location message ---*/
@@ -338,6 +354,18 @@ public class ElevatorControl extends Thread{
 						System.exit(1);
 					}
 				}// end update location
+			
+			case ERROR: 
+				System.out.println("error");
+					try {
+						sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
+						
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+					break;
+				
 			}//end header switch
 		}//end while (true)
 	}// end control()
