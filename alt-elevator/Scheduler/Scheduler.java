@@ -376,7 +376,7 @@ class ElevatorHandler extends Thread {
 	private Map<Integer,String[]> dropoffQ;			// dropoff queue containing Integer destination floors
 	private String newCommand = "";
 	private String specialCommand = "";
-	private int targetSrc;
+	private int targetSrc = 0;
 	private int targetDest;
 	private ArrayList<Integer> srcFloors = new ArrayList<Integer>();
 	private ArrayList<Integer> srcFloorsDiff = new ArrayList<Integer>();
@@ -436,7 +436,7 @@ class ElevatorHandler extends Thread {
 		
 		while (running) {
 
-			String request = serviceQ.peek();		
+			String request = serviceQ.peek();	
 
 			/*
 			 *  determining which way the elevator needs to go to pickup and dropoff
@@ -460,10 +460,12 @@ class ElevatorHandler extends Thread {
 					if (Integer.parseInt(srcFloor) > currentFloor) {
 						ins = Scheduler.UP_MOVE;
 						currentDirection = "UP";
+						targetSrc = Integer.parseInt(srcFloor);
 					}
 					else if (Integer.parseInt(srcFloor) < currentFloor) {
 						ins = Scheduler.DOWN_MOVE;
 						currentDirection = "DOWN";
+						targetSrc = Integer.parseInt(srcFloor);
 					}				
 					else {
 						ins = Scheduler.STOP;	// elevator is already there
@@ -475,7 +477,8 @@ class ElevatorHandler extends Thread {
 					String[] destAndDir = { destFloor, direction };
 					pickupQ.put(Integer.parseInt(srcFloor), destAndDir);
 					dropoffQ.put(Integer.parseInt(destFloor), srcAndDir);
-					moving(ins, destFloor);
+					moving(ins, Integer.toString(targetSrc), destFloor);
+					targetSrc = 0;
 				}
 			}
 			
@@ -484,7 +487,7 @@ class ElevatorHandler extends Thread {
 //				Special case for pickup/dropoff on same floor
 				if (!specialCommand.equals("")) {
 					ins = specialCommand;
-					moving(ins, Integer.toString(targetDest));
+					goIdle(ins);
 					specialCommand = "";
 				}
 				else {
@@ -493,14 +496,17 @@ class ElevatorHandler extends Thread {
 					newCommand = "";
 					if (ins == Scheduler.UP_PICKUP || ins == Scheduler.UP_DROPOFF) currentDirection = "UP";
 					if (ins == Scheduler.DOWN_PICKUP || ins == Scheduler.DOWN_DROPOFF) currentDirection = "DOWN";
+					
 					if (ins == Scheduler.GO_IDLE) goIdle(ins);
-					else moving(ins, Integer.toString(targetDest));
+					else moving(ins, Integer.toString(targetSrc), Integer.toString(targetDest));
+					targetSrc = 0;
 				}
 			}
 		
 //			Should only be called for cases where an elevator has gone idle, and had received a new request
 //			while previously in transit
-			if (!pickupQ.isEmpty()) {
+//			DropoffQ and pickupQ size will be equal if the elevator was idle
+			if (!pickupQ.isEmpty() && pickupQ.size() == dropoffQ.size()) {
 				System.out.println(String.format("sub-%d: pickupQ not empty", this.id));
 //				Iterate over the pickup queue, placing difference scores in srcFloorsDiff
 //				and their corresponding floors in srcFloors, in order to find the floor closest to elevator
@@ -528,6 +534,7 @@ class ElevatorHandler extends Thread {
 					if (pickupQ.get(targetSrc)[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
 					if (pickupQ.get(targetSrc)[1].equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
 					targetDest = Integer.parseInt(pickupQ.get(targetSrc)[0]);
+					targetSrc = 0;
 				}
 			}
 			
@@ -562,16 +569,15 @@ class ElevatorHandler extends Thread {
 			e.printStackTrace();
 		}
 		
-		
 	}
 	
 	
-	public void moving(String ins, String destFloor) {
+	public void moving(String ins, String targetFloor, String destFloor) {
 		String[] parsedData;
 		Boolean singleRemoval = false;
 		Boolean doubleRemoval = false;
 		keepMoving = (ins == Scheduler.STOP || ins == Scheduler.GO_IDLE ? false : true); // if the elevator is already there no need for positional updates
-		
+		Boolean onlyMove = (Integer.parseInt(targetFloor) > 0);
 		String newRequest = "";	
 		String[] newParsedData;
 		String newDirection = "";
@@ -632,11 +638,9 @@ class ElevatorHandler extends Thread {
 				System.out.println(Arrays.toString(rPacketParsed));
 				
 				currentFloor = Integer.parseInt(rPacketParsed[1]);
-//				checks if service is in queue, if so pop and add to start/dest lists
-//				checks if current floor is in dropoff list each time
-//				String uq = upQ.poll();
+//				Checks if service is in queue, if so pop and add to start/dest lists
+//				Checks if current floor is in dropoff list each time
 				String request = serviceQ.poll();
-//				String request = (dq == null) ? uq : dq;	
 				if (request != null) {
 					newRequest = request;	
 					newParsedData = newRequest.split(" ");		
@@ -647,46 +651,63 @@ class ElevatorHandler extends Thread {
 					dropoffQ.put(Integer.parseInt(newParsedData[3]), srcAndDir);
 				}
 				
-//				Check the pickupQ with each elevator floor update while moving
-				System.out.printf("sub-%d: checking pickupQ - current floors: ", this.id);
-				for (Integer p : pickupQ.keySet()) {
-					System.out.printf("%d ", p);
-					if (p == currentFloor) {
-//						Handle intermediate pickup by sending UPPICKUP or DOWNPICKUP after STOPOPENCLOSE
-						if (pickupQ.get(p)[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
-						if (pickupQ.get(p)[1].equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
-						keepMoving = false;
-						targetDest = Integer.parseInt(pickupQ.get(p)[0]);
-						pickupQ.remove(p);
-						System.out.printf("\nsub-%d: removed %d from pickup list\n", this.id, p);
-						singleRemoval = true;
-					}
-				}
-				System.out.println();
-				
-//				Check the dropoffQ with each elevator floor update while moving
-				System.out.printf("sub-%d: checking dropoffQ - current floors: ", this.id);
-				dropoffloop:
-				for (Integer d : dropoffQ.keySet()) {
-					System.out.printf("%d ", d);
-					if (d == currentFloor) {
-						if (singleRemoval) doubleRemoval = true;
-//						Parse through pickupQ, and if the dropoff Floor being passed 
-//						matches any floor in the pickupQ, break loop and ignore removal
-						for (Integer p : pickupQ.keySet()) {
-							if (p == d) break dropoffloop;
+
+				if (!onlyMove) {
+	//				Check the pickupQ with each elevator floor update while moving
+					System.out.printf("sub-%d: checking pickupQ - current floors: ", this.id);
+					for (Integer p : pickupQ.keySet()) {
+						System.out.printf("%d ", p);
+						if (p == currentFloor) {
+	//						Handle intermediate pickup by sending UPPICKUP or DOWNPICKUP after STOPOPENCLOSE
+							if (pickupQ.get(p)[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
+							if (pickupQ.get(p)[1].equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
+							keepMoving = false;
+							targetDest = Integer.parseInt(pickupQ.get(p)[0]);
+							pickupQ.remove(p);
+							System.out.printf("\nsub-%d: removed %d from pickup list\n", this.id, p);
+							singleRemoval = true;
 						}
-						
-//						if (ins.equals(Scheduler.UP_MOVE) || ins.equals(Scheduler.DOWN_MOVE)) break;
-	//					Handle intermediate dropoff by sending UPDROPOFF or DOWNDROPOFF after STOPOPENCLOSE
-						if (currentDirection.equals("UP") && !doubleRemoval) newCommand = Scheduler.UP_DROPOFF;
-						if (currentDirection.equals("DOWN") && !doubleRemoval) newCommand = Scheduler.DOWN_DROPOFF;
-						keepMoving = false;
-						dropoffQ.remove(d);
-						System.out.printf("\nsub-%d: removed %d from dropoff list\n", this.id, d);
 					}
+					System.out.println();
+
+//					Check the dropoffQ with each elevator floor update while moving
+					System.out.printf("sub-%d: checking dropoffQ - current floors: ", this.id);
+					dropoffloop:
+					for (Integer d : dropoffQ.keySet()) {
+						System.out.printf("%d ", d);
+						if (d == currentFloor) {
+							if (singleRemoval) doubleRemoval = true;
+							
+//							Parse through pickupQ, and if the dropoff Floor being passed 
+//							matches any floor in the pickupQ, break loop and ignore removal
+							for (Integer p : pickupQ.keySet()) {
+								if (p == d) break dropoffloop;
+							}
+							
+//							if (ins.equals(Scheduler.UP_MOVE) || ins.equals(Scheduler.DOWN_MOVE)) break;
+							keepMoving = false;
+							dropoffQ.remove(d);
+							System.out.printf("\nsub-%d: removed %d from dropoff list\n", this.id, d);
+		//					Handle intermediate dropoff by sending UPDROPOFF or DOWNDROPOFF after STOPOPENCLOSE
+//							if (currentDirection.equals("UP") && !doubleRemoval && !dropoffQ.isEmpty()) newCommand = Scheduler.UP_DROPOFF;
+							if (currentDirection.equals("DOWN") && !doubleRemoval && !dropoffQ.isEmpty()) newCommand = Scheduler.DOWN_DROPOFF;
+
+						}
+					}
+					System.out.println();
 				}
-				System.out.println();
+				
+				// Should only trigger if in DOWNMOVE or UPMOVE
+				// Done so the elevator can ignore the queues and just move to pick up target passenger,
+				// when then elevator was previously idle
+				if (Integer.parseInt(targetFloor) == currentFloor) {
+					keepMoving = false;
+					if (pickupQ.get(currentFloor)[1].equals("UP")) newCommand = Scheduler.UP_PICKUP;
+					if (pickupQ.get(currentFloor)[1].equals("DOWN")) newCommand = Scheduler.DOWN_PICKUP;
+					targetDest = Integer.parseInt(pickupQ.get(currentFloor)[0]);
+					System.out.printf("\nsub-%d: removed %d from pickup list\n", this.id, currentFloor);
+					pickupQ.remove(currentFloor);
+				}
 				
 				// if elevator is at required floor then stop
 				if (!keepMoving) {
@@ -708,8 +729,8 @@ class ElevatorHandler extends Thread {
 					System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 					System.out.println(Arrays.toString(aPacketParsed));	
 				}
-			}					
-			// if _PICKUP here 
+			}				
+			
 			// send update to floor that the elevator has arrived
 			if (ins.equals(Scheduler.UP_PICKUP) || ins.equals(Scheduler.DOWN_PICKUP)) 
 				sendPositionToFloor(Integer.toString(currentFloor));
@@ -745,8 +766,10 @@ class ElevatorHandler extends Thread {
 				newCommand = Scheduler.GO_IDLE;
 			}
 			
-//			If the same floor is removed from each queue, use a special command that will send GO_IDLE,
+//			Special case: if the same floor is removed from each queue, use a special command that will send GO_IDLE,
 //			followed by the UP_PICKUP/DOWN_PICKUP that was issued to newCommand.
+//			This will tell the elevator to go idle because a passenger has been dropped off, then instruct
+//			it to pickup another passenger in the queue
 			if (doubleRemoval) specialCommand = Scheduler.GO_IDLE;
 		}
 		catch (Exception e) {
