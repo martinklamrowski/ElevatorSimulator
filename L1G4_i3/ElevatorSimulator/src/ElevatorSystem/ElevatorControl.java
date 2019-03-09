@@ -196,10 +196,11 @@ public class ElevatorControl extends Thread{
 					elevator.open(num_elevator);
 					send = 0;
 					
+					// if elevator #3 gets to floor 5, elevator is stuck.
 					if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
 						try {
 							System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
-							Thread.sleep(10000);
+							Thread.sleep(10000); // sleep for 10s
 						}
 						catch (Exception e) {
 							e.printStackTrace();
