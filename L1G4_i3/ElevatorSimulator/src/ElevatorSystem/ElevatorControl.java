@@ -195,28 +195,31 @@ public class ElevatorControl extends Thread{
 					System.out.println("cmd, OPEN door");
 					elevator.open(num_elevator);
 					send = 0;
-					if (s_elevator != -1) {
+					
+					if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
+						try {
+							System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
+							Thread.sleep(10000);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+						
+					else if  (s_elevator != -1) {
 						if (s_elevator == 1) {
 							/*--- door open for pick up, elevator lamp ON ---*/
 							elevator.Lamp[num_lamp-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp ON at " + num_lamp);
-						}else if (s_elevator == 0) {
+						} else if (s_elevator == 0) {
 							/*--- door open for drop off, elevator lamp OFF ---*/
 							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
-						} else if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
-							try {
-								System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
-								Thread.sleep(10000);
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-							}
-						
-						// ACK the error 	
-						}
+						} 
 						s_elevator = -1;		// elevator job open door
 					}// end if not -1
+						
+					
 					break;		// end DOOR_OPEN				
 
 				case DOOR_CLOSE:
