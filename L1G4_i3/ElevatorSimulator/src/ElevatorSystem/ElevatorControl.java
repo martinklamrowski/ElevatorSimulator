@@ -357,7 +357,7 @@ public class ElevatorControl extends Thread{
 				}// end update location
 			
 			case ERROR: 
-				//System.out.println("error");
+				System.out.println("error");
 					try {
 						sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
 						
