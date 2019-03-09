@@ -35,6 +35,7 @@ public class Scheduler {
 	public static final String DOOR_CLOSE = "0x3B";							// close car door
 	public static final String STOP = "0x3C";								// stop elevator car
 	public static final String ERROR_DOOR_JAM = "0xE0";						// error door jam
+	public static final String ERROR_STUCK = "0xE1";						// elevator stuck
 	/* ## ------------------------------ ## */
 	
 	/* ## NETWORK INFO ## */
@@ -182,11 +183,6 @@ public class Scheduler {
 					int FS3 = calculateSuitability(FLOORS, handler3.currentFloor, Integer.parseInt(temp[1]), handler3.currentDirection, temp[2], handler3.status);
 					int FS4 = calculateSuitability(FLOORS, handler4.currentFloor, Integer.parseInt(temp[1]), handler4.currentDirection, temp[2], handler4.status);
 					int maxFS = Math.max(Math.max(FS1, FS2), Math.max(FS3, FS4));
-					
-					System.out.println(FS1);
-					System.out.println(FS2);
-					System.out.println(FS3);
-					System.out.println(FS4);
 					
 					if (maxFS == FS1) {
 						if (temp[2].equals("UP")) {
@@ -450,9 +446,7 @@ class ElevatorHandler extends Thread {
 					currentDirection = "DOWN";
 				}
 				else {
-					pIns = Scheduler.STOP;	// elevator is already there
-				
-					
+					pIns = Scheduler.STOP;	// elevator is already there			
 				}
 				performPickup(pIns, request);
 				
@@ -489,6 +483,7 @@ class ElevatorHandler extends Thread {
 		String srcFloor, destFloor;
 		String[] parsedData;
 		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates
+		String error = Scheduler.ERROR_STUCK;
 		
 		parsedData = request.split(" ");
 		srcFloor = parsedData[1];
@@ -564,6 +559,8 @@ class ElevatorHandler extends Thread {
 				// send update to floor that the elevator has arrived
 				sendPositionToFloor(srcFloor);
 				
+				error = Scheduler.ERROR_DOOR_JAM;
+				
 				// sending open door
 				cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN, eport);
 				System.out.println(String.format("sub-%d: sending open door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
@@ -592,7 +589,7 @@ class ElevatorHandler extends Thread {
 			}
 			catch (SocketTimeoutException ste) {
 				System.out.println(String.format("sub-%d: error encountered, taking elevator out of operation.", this.id));
-				ePacket = Scheduler.createPacket(Scheduler.ERROR, Scheduler.ERROR_DOOR_JAM, eport);							// sending error to elevator subsystem
+				ePacket = Scheduler.createPacket(Scheduler.ERROR, error, eport);							// sending error to elevator subsystem
 				eSocket.send(ePacket);
 				
 				eSocket.receive(aPacket);
@@ -619,6 +616,7 @@ class ElevatorHandler extends Thread {
 		String destFloor;
 		String[] parsedData;
 		boolean keepMoving = true;
+		String error = Scheduler.ERROR_STUCK;
 		
 		parsedData = request.split(" ");
 		destFloor = parsedData[3];
@@ -675,6 +673,8 @@ class ElevatorHandler extends Thread {
 				System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 				System.out.println(Arrays.toString(aPacketParsed));
 				
+				error = Scheduler.ERROR_DOOR_JAM;
+				
 				// sending open door
 				cPacket = Scheduler.createPacket(Scheduler.CMD, Scheduler.DOOR_OPEN, eport);
 				System.out.println(String.format("sub-%d: sending open door ( string >> %s, byte array >> %s ).\n", this.id, new String(cPacket.getData()), cPacket.getData()));
@@ -705,7 +705,7 @@ class ElevatorHandler extends Thread {
 			}
 			catch (SocketTimeoutException ste) {
 				System.out.println(String.format("sub-%d: error encountered, taking elevator out of operation.", this.id));
-				ePacket = Scheduler.createPacket(Scheduler.ERROR, Scheduler.ERROR_DOOR_JAM, eport);							// sending error to elevator subsystem
+				ePacket = Scheduler.createPacket(Scheduler.ERROR, error, eport);							// sending error to elevator subsystem
 				eSocket.send(ePacket);
 				
 				eSocket.receive(aPacket);

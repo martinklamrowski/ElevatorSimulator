@@ -1,16 +1,35 @@
 ~~~
-Authors: Martin Klamrowski, Angie Byun
+Authors: Martin Klamrowski, Angie Byun, Tashfiq Akhand
 Last modified: 3/8/2019
 ~~~
 
 ********** ITERATION 3 - L1 Group 4 **********
-______________________
-TEAM MEMBERS AND ROLES:
-~ Arianna Shi - timing diagram
-~ Sunjay Panesar - timing diagram
-~ Tashfiq Akhand - timing diagram
+__________________________
+TEAM MEMBERS CONTRIBUTIONS:
+
+i3:
+===
+~ Arianna Shi - 
+~ Sunjay Panesar - 
+~ Tashfiq Akhand - 
+~ Martin Klamrowski - code for Scheduler, code for Elevator Subsystem
+~ Angie Byun - code for Elevator Subsystem, timing diagram
+
+i2:
+===
+~ Arianna Shi - code for Elevator Subsystem
+~ Sunjay Panesar - code for Floor Subsystem, code for Elevator Subsystem, code for Scheduler
+~ Tashfiq Akhand - Timing Diagram, JUnit Testing
 ~ Martin Klamrowski - code for Scheduler 
-~ Angie Byun - code for Elevator Subsystem
+~ Angie Byun - code for Scheduler, Class Diagram
+
+i1:
+===
+~ Arianna Shi - code for Elevator Subsystem
+~ Sunjay Panesar - code for Floor Subsystem
+~ Tashfiq Akhand - JUnit testing
+~ Martin Klamrowski - code for Scheduler 
+~ Angie Byun - class diagram, state machine diagram, code for Scheduler
 __________________________________________
 THE ELEVATOR SIMULATOR PROJECT CONSISTS OF: 
 
@@ -33,7 +52,7 @@ RUNNING:
 note: the FloorSubsystem provides the requests immediately on so ensure the Scheduler and ElevatorControl are running before 
 
 	- in Eclipse, run the Scheduler.java and ElevatorControl.java files, and then the FloorSubsystem.java file
-	- the input requests provided by the FloorSubsystem are: 1-4, 5-1, 3-18, 1-7, 1-21, 7-1, 1-4, 18-1
+	- the input requests provided by the FloorSubsystem are: 9-4, 5-1, 3-18, 1-7, 1-21, 7-1, 1-4, 18-1
 	- you can open 3 consoles to show the output of all 3 systems:
 		> the ElevatorControl prints what floor the elevator is at, lamp information and door opening and closing actions
 		> the FloorSubsystem shows what floor lamps have been lit and the outgoing requests sent to the Scheduler with time stamps
@@ -72,10 +91,19 @@ The timing diagram taken into the event of the elevator moving towards the desig
 The lines of the diagram that are horizonal represents the remaining in the state described in the second column and the vertical line 
 represents the shifting of states, the line is associated to a timeline presented below and the diagram shows all 3 system 
 synchronization. The error scenario labelled on the horizontal lines is where the possibility of an error can occur 
-which would stop the timing diagram and not continue furthur. If the error did not occur, then timing digram would resume.
+which would stop the timing diagram and not continue furthur. If the error did not occur, then timing diagram would resume.
 
+____________
+ERROR STATES:
 
+The error state shown in the timing diagram was implemented in iteration 3. The error was injected through the Elevator Subsystem.
+In this scenario, there are two error scenarios:
 
+	- Error 1: there is a faulty sensor in shaft 3 (elevator 3) at floor 5
+	- Error 2: elevator 4 gets stuck between floor 15 and 14, i.e. stuck between floors
+
+In both scenarios the Scheduler will detect the error and take the corresponding elevator out of service and will not give it anymore 
+service requests. The errors are injected through the Elevator Subsystem; lines 202 and 315 of ElevatorControl.java. 
 
 
 

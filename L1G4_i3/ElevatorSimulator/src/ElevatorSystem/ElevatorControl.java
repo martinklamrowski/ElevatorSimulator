@@ -28,6 +28,8 @@ public class ElevatorControl extends Thread{
 	private static final String DOOR_OPEN = "0x3A";
 	private static final String DOOR_CLOSE = "0x3B";
 	private static final String STOP = "0x3C";
+	private static final String ERROR_DOOR_JAM = "0xE0";
+	private static final String ERROR_STUCK = "0xE1";
 	public static ElevatorControl Elv_1, Elv_2, Elv_3, Elv_4;
 	
 	
@@ -133,7 +135,8 @@ public class ElevatorControl extends Thread{
 		receivePacket = new DatagramPacket(_data, _data.length);
 		String[] ins = packetToString(receivePacket.getData());
 		String[] cmd = null;
-		String[] data = null;	
+		String[] data = null;
+		String[] error = null;
 		
 		while(true) {
 			try {
@@ -180,8 +183,8 @@ public class ElevatorControl extends Thread{
 					elevator.run();
 					System.out.println("ELEVATOR " + num_elevator + ": Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					send = 1;	// send elevator location
-					s_elevator = 0;		// elevator job drop off
+					send = 1;				// send elevator location
+					s_elevator = 0;			// elevator job drop off
 					break;		// end DOWN_DROPOFF
 
 				case DOWN_PICKUP:
@@ -196,7 +199,7 @@ public class ElevatorControl extends Thread{
 					elevator.open(num_elevator);
 					send = 0;
 					
-					/* THERE IS A FAULTY SENSOR IN SHAFT 3 AT FLOOR 5 */
+					/* ### THERE IS A FAULTY SENSOR IN SHAFT 3 AT FLOOR 5 ### */
 					if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
 						try {
 							System.out.println("ELEVATOR " + num_elevator + " is STUCK at Floor " + elevator.getCurrentFloor());
@@ -206,6 +209,7 @@ public class ElevatorControl extends Thread{
 							e.printStackTrace();
 						}
 					}
+					/* ### END OF ERROR INJECTION ### */
 						
 					else if  (s_elevator != -1) {
 						if (s_elevator == 1) {
@@ -307,6 +311,19 @@ public class ElevatorControl extends Thread{
 					e1.printStackTrace();
 					System.exit(1);
 				}
+				
+				/* ### THERE IS A STUCKY THING IN ELEVATOR SHAFT 4 AT FLOOR 15 ### */
+				if (num_elevator == 4 & elevator.getCurrentFloor().equals("15")) {
+					try {
+						System.out.println("ELEVATOR " + num_elevator + " is STUCK at Floor " + elevator.getCurrentFloor());
+						Thread.sleep(10000);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				/* ### END OF ERROR INJECTION ### */
+				
 				break;		// end ACK
 			
 			case DATA:
@@ -319,8 +336,8 @@ public class ElevatorControl extends Thread{
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(data[1]); 	// record elevator lamp
+					s_elevator = 1;							// elevator job pick up
+					num_lamp = toInt(data[1]); 				// record elevator lamp
 					send = 1;
 					break;
 
@@ -329,16 +346,17 @@ public class ElevatorControl extends Thread{
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(data[1]); 	// record elevator lamp
+					s_elevator = 1;							// elevator job pick up
+					num_lamp = toInt(data[1]); 				// record elevator lamp
 					send = 1;
 					break;
 
 				case STOP:
-					s_elevator = 1;		// elevator job pick up
-					num_lamp = toInt(data[1]); 	// record elevator lamp
+					s_elevator = 1;							// elevator job pick up
+					num_lamp = toInt(data[1]); 				// record elevator lamp
 					send = 0;
-					break;				}// end CMD switch
+					break;				
+				}// end CMD switch
 					
 				/*--- send ACK message ---*/
 				sendAPacket = createPacket(ACK, data[1], receivePacket.getPort());
@@ -361,14 +379,22 @@ public class ElevatorControl extends Thread{
 			
 			case ERROR:
 				/*----- ERROR packet received -----*/
-				System.out.println("!!!ERROR!!! ELEVATOR SERVICE POSTPONED");
-				try {
-					sendPacket = createPacket(ACK, data[1], receivePacket.getPort());		
+				error = ins;
+				switch (error[1]) {
+				case ERROR_DOOR_JAM:
+					System.out.println("!!!ERROR DOOR JAM!!! ELEVATOR SERVICE POSTPONED");
+					break;
+				case ERROR_STUCK:
+					System.out.println("!!!ERROR ELEVATOR STUCK!!! ELEVATOR SERVICE POSTPONED");
+					break;
+				}				
+				try {					
+					sendPacket = createPacket(ACK, error[1], receivePacket.getPort());		
 				}
 				catch (Exception e) {
 					e.printStackTrace();
-				}
-				break;				
+				}				
+				break;
 				
 			default: 
 				break;
