@@ -150,6 +150,9 @@ public class ElevatorControl extends Thread{
 			ins = packetToString(receivePacket.getData());
 			
 			switch (ins[0]) {
+			default: 
+				continue;
+				
 			case CMD:
 				/*====== CMD packet received ======*/
 				cmd = ins;
@@ -356,7 +359,7 @@ public class ElevatorControl extends Thread{
 				}// end update location
 			
 			case ERROR: 
-				System.out.println("error");
+				//System.out.println("error");
 					try {
 						sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
 						
