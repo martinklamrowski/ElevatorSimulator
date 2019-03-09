@@ -204,17 +204,15 @@ public class ElevatorControl extends Thread{
 							/*--- door open for drop off, elevator lamp OFF ---*/
 							elevator.Lamp[elevator.getIntFloor()-1] = s_elevator;
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
-						}
-						else {
-							if (num_elevator == 3 && elevator.getCurrentFloor().equals("5")) {
-								try {
-									System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
-									Thread.sleep(10000);
-								}
-								catch (Exception e) {
-									e.printStackTrace();
-								}
+						} else if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
+							try {
+								System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
+								Thread.sleep(10000);
 							}
+							catch (Exception e) {
+								e.printStackTrace();
+							}
+						
 						// ACK the error 	
 						}
 						s_elevator = -1;		// elevator job open door
@@ -355,9 +353,12 @@ public class ElevatorControl extends Thread{
 						System.exit(1);
 					}
 				}// end update location
+				break;
 			
 			case ERROR: 
 				System.out.println("error");
+				/*----- ERROR packet received -----*/
+
 				try {
 					sendPacket = createPacket(ACK, data[1], receivePacket.getPort());		
 				}
@@ -365,6 +366,7 @@ public class ElevatorControl extends Thread{
 					e.printStackTrace();
 				}
 				break;
+				
 				
 			default: 
 				break;
