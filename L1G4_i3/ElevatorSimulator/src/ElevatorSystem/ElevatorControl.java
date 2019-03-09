@@ -185,7 +185,7 @@ public class ElevatorControl extends Thread{
 					break;		// end DOWN_DROPOFF
 
 				case DOWN_PICKUP:
-					System.out.println("cmd, UP for drop off");
+					System.out.println("cmd, DOWN for pick up");
 					System.out.println("ELEVATOR " + num_elevator + ": wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					send = 0;
@@ -358,16 +358,16 @@ public class ElevatorControl extends Thread{
 			
 			case ERROR: 
 				System.out.println("error");
-					try {
-						sendPacket = createPacket(ACK, data[1], receivePacket.getPort());
-						
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-					break;
+				try {
+					sendPacket = createPacket(ACK, data[1], receivePacket.getPort());		
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				break;
+				
 			default: 
-				continue;
+				break;
 				
 			}//end header switch
 		}//end while (true)
