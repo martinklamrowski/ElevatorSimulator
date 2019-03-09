@@ -34,6 +34,7 @@ public class Scheduler {
 	public static final String DOOR_OPEN = "0x3A";							// open car door
 	public static final String DOOR_CLOSE = "0x3B";							// close car door
 	public static final String STOP = "0x3C";								// stop elevator car
+	public static final String ERROR_DOOR_JAM = "0xE0";						// error door jam
 	/* ## ------------------------------ ## */
 	
 	/* ## NETWORK INFO ## */
@@ -105,10 +106,10 @@ public class Scheduler {
 		byte[] buffer = new byte[8];
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);			// received packet		
 		
-		//handler1.start();
-		//handler2.start();
+		handler1.start();
+		handler2.start();
 		handler3.start();
-		//handler4.start();
+		handler4.start();
 		
 		while (listening) {
 			try {
@@ -176,11 +177,16 @@ public class Scheduler {
 					/* ###################################################### */					
 					String[] temp = dPacketParsed[1].split(" ");
 					
-					int FS1 = calculateSuitability(FLOORS, handler1.currentFloor, Integer.parseInt(temp[1]), handler1.currentDirection, temp[2]);
-					int FS2 = calculateSuitability(FLOORS, handler2.currentFloor, Integer.parseInt(temp[1]), handler2.currentDirection, temp[2]);
-					int FS3 = calculateSuitability(FLOORS, handler3.currentFloor, Integer.parseInt(temp[1]), handler3.currentDirection, temp[2]);
-					int FS4 = calculateSuitability(FLOORS, handler4.currentFloor, Integer.parseInt(temp[1]), handler4.currentDirection, temp[2]);
+					int FS1 = calculateSuitability(FLOORS, handler1.currentFloor, Integer.parseInt(temp[1]), handler1.currentDirection, temp[2], handler1.status);
+					int FS2 = calculateSuitability(FLOORS, handler2.currentFloor, Integer.parseInt(temp[1]), handler2.currentDirection, temp[2], handler2.status);
+					int FS3 = calculateSuitability(FLOORS, handler3.currentFloor, Integer.parseInt(temp[1]), handler3.currentDirection, temp[2], handler3.status);
+					int FS4 = calculateSuitability(FLOORS, handler4.currentFloor, Integer.parseInt(temp[1]), handler4.currentDirection, temp[2], handler4.status);
 					int maxFS = Math.max(Math.max(FS1, FS2), Math.max(FS3, FS4));
+					
+					System.out.println(FS1);
+					System.out.println(FS2);
+					System.out.println(FS3);
+					System.out.println(FS4);
 					
 					if (maxFS == FS1) {
 						if (temp[2].equals("UP")) {
@@ -234,10 +240,14 @@ public class Scheduler {
 	 * @param requestedDir - requested direction
 	 * @return calculated
 	 */
-	public static int calculateSuitability(int n, int currentFloor, int requestedFloor, String currentElevatorDir, String requestedDir) {
+	public static int calculateSuitability(int n, int currentFloor, int requestedFloor, String currentElevatorDir, String requestedDir, String status) {
 		
 		int calculated = 0;
 		int distance = currentFloor - requestedFloor; // if -ive, call is above, if +ive, call is below
+		
+		if (status.equals("SUSPENDED")) {
+			return -1;
+		}
 		
 		// current direction of elevator is IDLE
 		if (currentElevatorDir.equals("IDLE")) {
@@ -362,7 +372,7 @@ class ElevatorHandler extends Thread {
 	
 	protected volatile String currentDirection;		// variable representing current direction of the elevator, to be accessed by the main thread as well
 	protected volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by the main thread as well
-	protected volatile int currentDestination;		// variable representing the last stop in the current request sequence
+	protected volatile String status;				// is elevator out of order or not
 	protected int id;
 	
 	
@@ -383,8 +393,9 @@ class ElevatorHandler extends Thread {
 			this.fport = fport;
 			this.upQ = upQ;
 			this.downQ = downQ;
-			this.currentDirection = currentDirection;
 			this.currentFloor = currentFloor;
+			this.currentDirection = currentDirection;
+			this.status = "WORKING";
 			this.id = id;
 		}
 		catch (Exception e) {
@@ -408,11 +419,13 @@ class ElevatorHandler extends Thread {
 				
 		while (running) {
 			
-			String uq = upQ.poll();
-			String dq = downQ.poll();
-			String request = (dq == null) ? uq : dq;			
+			String request = upQ.poll();
 			
-			if (request != null) {
+			if (request == null) {
+				request = downQ.poll();
+			}
+			
+			if (request != null && status.equals("WORKING")) {
 				parsedData = request.split(" ");
 				srcFloor = parsedData[1];
 				direction = parsedData[2];
@@ -427,6 +440,7 @@ class ElevatorHandler extends Thread {
 				 *	if dest_floor > src_floor - go up after pickup
 				 *	if dest_floor < src_floor - go down after pickup
 				 */				
+				
 				if (Integer.parseInt(srcFloor) > currentFloor) {
 					pIns = Scheduler.UP_PICKUP;
 					currentDirection = "UP";
@@ -437,22 +451,25 @@ class ElevatorHandler extends Thread {
 				}
 				else {
 					pIns = Scheduler.STOP;	// elevator is already there
+				
+					
 				}
 				performPickup(pIns, request);
 				
-				// drop off direction
-				if (direction.equals("UP")) {
-					dIns = Scheduler.UP_DROPOFF;
-					currentDirection = "UP";
-				}
-				else { //down
-					dIns = Scheduler.DOWN_DROPOFF;
-					currentDirection = "DOWN";
-				}		
-				performDropoff(dIns, request);
+				if (status.equals("WORKING")) {
+					// drop off direction
+					if (direction.equals("UP")) {
+						dIns = Scheduler.UP_DROPOFF;
+						currentDirection = "UP";
+					}
+					else { //down
+						dIns = Scheduler.DOWN_DROPOFF;
+						currentDirection = "DOWN";
+					}		
+					performDropoff(dIns, request);					
+				}				
 			}
 			else {
-				currentDirection = "IDLE";
 				continue;
 			}
 		}			
@@ -482,13 +499,13 @@ class ElevatorHandler extends Thread {
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket dPacket = Scheduler.createPacket(Scheduler.DATA, destFloor, eport);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
+		DatagramPacket ePacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
 		System.out.println(String.format("sub-%d: forwarding command packet ( string >> %s, byte array >> %s ).", this.id, new String(cPacket.getData()), cPacket.getData()));
 		
 		try {
-			try {
-			
+			try {			
 				// send cmd
 				eSocket.send(cPacket);
 				
@@ -575,6 +592,12 @@ class ElevatorHandler extends Thread {
 			}
 			catch (SocketTimeoutException ste) {
 				System.out.println(String.format("sub-%d: error encountered, taking elevator out of operation.", this.id));
+				ePacket = Scheduler.createPacket(Scheduler.ERROR, Scheduler.ERROR_DOOR_JAM, eport);							// sending error to elevator subsystem
+				eSocket.send(ePacket);
+				
+				eSocket.receive(aPacket);
+				status = "SUSPENDED";
+				
 				return;
 			}
 		}
@@ -604,6 +627,7 @@ class ElevatorHandler extends Thread {
 		DatagramPacket cPacket = Scheduler.createPacket(Scheduler.CMD, ins, eport);
 		DatagramPacket aPacket = new DatagramPacket(buffer, buffer.length);
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
+		DatagramPacket ePacket = new DatagramPacket(buffer, buffer.length);
 		String[] rPacketParsed;
 		
 		System.out.println(String.format("sub-%d: forwarding command packet ( string >> %s, byte array >> %s ).", this.id, new String(cPacket.getData()), cPacket.getData()));
@@ -681,6 +705,12 @@ class ElevatorHandler extends Thread {
 			}
 			catch (SocketTimeoutException ste) {
 				System.out.println(String.format("sub-%d: error encountered, taking elevator out of operation.", this.id));
+				ePacket = Scheduler.createPacket(Scheduler.ERROR, Scheduler.ERROR_DOOR_JAM, eport);							// sending error to elevator subsystem
+				eSocket.send(ePacket);
+				
+				eSocket.receive(aPacket);
+				status = "SUSPENDED";
+				
 				return;
 			}
 		}

@@ -38,13 +38,13 @@ public class SchedulerTest extends TestCase{
 		assertEquals(packet, s.createPacket("1", "3", 8008));
 		
 		//testing calculateSuitability method in Scheduler class
-		assertEquals(8, s.calculateSuitability(7, 5, 5, "IDLE", "IDLE"));
-		assertEquals(1, s.calculateSuitability(7, 5, 6, "DOWN", "IDLE"));
-		assertEquals(7, s.calculateSuitability(7, 5, 3, "DOWN", "DOWN"));
-		assertEquals(6, s.calculateSuitability(7, 5, 3, "DOWN", "IDLE"));
-		assertEquals(1, s.calculateSuitability(7, 2, 1, "UP", "UP"));
-		assertEquals(5, s.calculateSuitability(7, 2, 5, "UP", "IDLE"));
-		assertEquals(6, s.calculateSuitability(7, 2, 5, "UP", "UP"));
+		assertEquals(8, s.calculateSuitability(7, 5, 5, "IDLE", "IDLE", "WORKING"));
+		assertEquals(1, s.calculateSuitability(7, 5, 6, "DOWN", "IDLE", "WORKING"));
+		assertEquals(7, s.calculateSuitability(7, 5, 3, "DOWN", "DOWN", "WORKING"));
+		assertEquals(6, s.calculateSuitability(7, 5, 3, "DOWN", "IDLE", "WORKING"));
+		assertEquals(1, s.calculateSuitability(7, 2, 1, "UP", "UP", "WORKING"));
+		assertEquals(5, s.calculateSuitability(7, 2, 5, "UP", "IDLE", "WORKING"));
+		assertEquals(6, s.calculateSuitability(7, 2, 5, "UP", "UP", "WORKING"));
 		
 		//testing parsePacket method in Scheduler class
 		String a = "Group 4";

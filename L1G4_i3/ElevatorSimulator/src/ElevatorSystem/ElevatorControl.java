@@ -162,7 +162,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved up, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved up, now at Floor " + elevator.getCurrentFloor());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
 					break;		// end UP_DROPOFF				
@@ -178,7 +178,7 @@ public class ElevatorControl extends Thread{
 					System.out.println("cmd, DOWN for drop off");
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator move DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					send = 1;	// send elevator location
 					s_elevator = 0;		// elevator job drop off
@@ -196,11 +196,11 @@ public class ElevatorControl extends Thread{
 					elevator.open(num_elevator);
 					send = 0;
 					
-					// if elevator #3 gets to floor 5, elevator is stuck.
+					/* THERE IS A FAULTY SENSOR IN SHAFT 3 AT FLOOR 5 */
 					if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
 						try {
-							System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
-							Thread.sleep(10000); // sleep for 10s
+							System.out.println("ELEVATOR " + num_elevator + " is STUCK at Floor " + elevator.getCurrentFloor());
+							Thread.sleep(10000);
 						}
 						catch (Exception e) {
 							e.printStackTrace();
@@ -234,7 +234,7 @@ public class ElevatorControl extends Thread{
 					System.out.println("cmd, STOP");
 					elevator.direction = ElevatorDirection.E_HOLD;
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator STOPPED at " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator STOPPED at " + elevator.getCurrentFloor());
 					send = 0;
 					break;		// end STOP
 
@@ -268,7 +268,7 @@ public class ElevatorControl extends Thread{
 				case UP_PICKUP:	
 					elevator.direction = ElevatorDirection.E_UP;		// move up
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 		// send elevator location
 					s_elevator = 1;				
 					break;		// end UP_PICKUP
@@ -276,7 +276,7 @@ public class ElevatorControl extends Thread{
 				case DOWN_PICKUP:
 					elevator.direction = ElevatorDirection.E_DOWN;		// move down
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort()); 
 					s_elevator = 1;
 					break;		// end DOWN_PICKUP
@@ -284,7 +284,7 @@ public class ElevatorControl extends Thread{
 				case UP_DROPOFF:
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;
 					break;		// end UP_DROPOFF
@@ -292,7 +292,7 @@ public class ElevatorControl extends Thread{
 				case DOWN_DROPOFF:
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
 					s_elevator = 0;		// elevator job drop off
 					break;		// end DOWN_DROPOFF
@@ -318,7 +318,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_UP;	//move up
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved UP, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
 					send = 1;
@@ -328,7 +328,7 @@ public class ElevatorControl extends Thread{
 					elevator.direction = ElevatorDirection.E_DOWN;	//move down
 					elevator.run();
 					sendPacket = createPacket(DATA, elevator.getCurrentFloor(),receivePacket.getPort());
-					System.out.println("ELEVATOR " + num_elevator + ":Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
+					System.out.println("ELEVATOR " + num_elevator + ": Elevator moved DOWN, now at Floor " + elevator.getCurrentFloor());
 					s_elevator = 1;		// elevator job pick up
 					num_lamp = toInt(data[1]); 	// record elevator lamp
 					send = 1;
@@ -359,18 +359,16 @@ public class ElevatorControl extends Thread{
 				}// end update location
 				break;
 			
-			case ERROR: 
-				System.out.println("error");
+			case ERROR:
 				/*----- ERROR packet received -----*/
-
+				System.out.println("!!!ERROR!!! ELEVATOR SERVICE POSTPONED");
 				try {
 					sendPacket = createPacket(ACK, data[1], receivePacket.getPort());		
 				}
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				break;
-				
+				break;				
 				
 			default: 
 				break;

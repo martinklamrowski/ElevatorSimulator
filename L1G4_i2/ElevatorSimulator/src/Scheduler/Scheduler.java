@@ -406,9 +406,11 @@ class ElevatorHandler extends Thread {
 				
 		while (running) {
 			
-			String uq = upQ.poll();
-			String dq = downQ.poll();
-			String request = (dq == null) ? uq : dq;			
+			String request = upQ.poll();
+			
+			if (request == null) {
+				request = downQ.poll();
+			}
 			
 			if (request != null) {
 				parsedData = request.split(" ");
