@@ -150,8 +150,6 @@ public class ElevatorControl extends Thread{
 			ins = packetToString(receivePacket.getData());
 			
 			switch (ins[0]) {
-			default: 
-				continue;
 				
 			case CMD:
 				/*====== CMD packet received ======*/
@@ -368,6 +366,8 @@ public class ElevatorControl extends Thread{
 						e.printStackTrace();
 					}
 					break;
+			default: 
+				continue;
 				
 			}//end header switch
 		}//end while (true)
