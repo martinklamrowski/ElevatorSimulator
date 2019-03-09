@@ -206,7 +206,7 @@ public class ElevatorControl extends Thread{
 							System.out.println("ELEVATOR " + num_elevator + ": Elevator Lamp OFF at " + num_lamp);
 						}
 						else {
-							if (num_elevator == 3 && elevator.getCurrentFloor().equals(5)) {
+							if (num_elevator == 3 && elevator.getCurrentFloor().equals("5")) {
 								try {
 									System.out.println("ELEVATOR " + num_elevator + " is stuck at floor: " + elevator.getCurrentFloor());
 									Thread.sleep(10000);
