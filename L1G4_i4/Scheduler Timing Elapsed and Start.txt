@@ -1,0 +1,130 @@
+main: floorRequestTimes:
+Elapsed time: 2426500 Start timestamp: 124024734900400
+Elapsed time: 36605900 Start timestamp: 124013697646300
+Elapsed time: 1631500 Start timestamp: 124095759406000
+Elapsed time: 8240900 Start timestamp: 124041739151800
+Elapsed time: 1568300 Start timestamp: 124104762164200
+Elapsed time: 2422200 Start timestamp: 124081753327400
+Elapsed time: 1595300 Start timestamp: 124082757014000
+Elapsed time: 1627700 Start timestamp: 124130764468000
+
+
+
+sub-1: elevatorArrivalSensorTimes:
+Elapsed time: 818700 Start timestamp: 124197811681500
+Elapsed time: 715400 Start timestamp: 124167801989800
+Elapsed time: 662600 Start timestamp: 124227823394600
+Elapsed time: 907400 Start timestamp: 124099773066500
+Elapsed time: 732800 Start timestamp: 124135787545700
+Elapsed time: 897600 Start timestamp: 124047750011400
+Elapsed time: 661700 Start timestamp: 124179805385000
+Elapsed time: 1270400 Start timestamp: 124081766364900
+Elapsed time: 1025500 Start timestamp: 124203814380100
+Elapsed time: 4060200 Start timestamp: 124215816966900
+Elapsed time: 923800 Start timestamp: 124087769427100
+Elapsed time: 729500 Start timestamp: 124063760159800
+Elapsed time: 823700 Start timestamp: 124239826236400
+Elapsed time: 835600 Start timestamp: 124069761903000
+Elapsed time: 848400 Start timestamp: 124129785318100
+Elapsed time: 285400 Start timestamp: 124161800350600
+Elapsed time: 805800 Start timestamp: 124075763684900
+Elapsed time: 834600 Start timestamp: 124209815677200
+Elapsed time: 621100 Start timestamp: 124221821635400
+Elapsed time: 717100 Start timestamp: 124173803863200
+Elapsed time: 766700 Start timestamp: 124117780969100
+Elapsed time: 767200 Start timestamp: 124111779411100
+Elapsed time: 1439800 Start timestamp: 124191808181600
+Elapsed time: 694200 Start timestamp: 124245831518600
+Elapsed time: 711800 Start timestamp: 124251833259900
+Elapsed time: 735800 Start timestamp: 124093771310900
+Elapsed time: 671100 Start timestamp: 124233824916100
+Elapsed time: 787700 Start timestamp: 124141788992500
+Elapsed time: 371900 Start timestamp: 124123782399900
+Elapsed time: 842800 Start timestamp: 124105776798600
+Elapsed time: 678900 Start timestamp: 124185806382600
+
+sub-1: elevatorStoppedTimes:
+Elapsed time: 1476500 Start timestamp: 124053751560500
+Elapsed time: 1034300 Start timestamp: 124257834656300
+Elapsed time: 1202100 Start timestamp: 124147790601900
+
+
+
+
+sub-2: elevatorArrivalSensorTimes:
+Elapsed time: 564800 Start timestamp: 124195800107400
+Elapsed time: 664000 Start timestamp: 124355842571000
+Elapsed time: 658500 Start timestamp: 124213804335400
+Elapsed time: 477000 Start timestamp: 124171793788500
+Elapsed time: 385300 Start timestamp: 124131781697000
+Elapsed time: 624600 Start timestamp: 124279816528200
+Elapsed time: 417300 Start timestamp: 124149784828100
+Elapsed time: 719000 Start timestamp: 124319833965300
+Elapsed time: 346000 Start timestamp: 124189800205800
+Elapsed time: 627100 Start timestamp: 124343840053800
+Elapsed time: 678300 Start timestamp: 124367845197000
+Elapsed time: 554000 Start timestamp: 124109772904400
+Elapsed time: 622800 Start timestamp: 124307831732100
+Elapsed time: 481500 Start timestamp: 124225805909600
+Elapsed time: 612500 Start timestamp: 124097771163200
+Elapsed time: 599700 Start timestamp: 124313832873900
+Elapsed time: 657300 Start timestamp: 124331837109400
+Elapsed time: 352100 Start timestamp: 124091765862300
+Elapsed time: 599400 Start timestamp: 124249808603800
+Elapsed time: 605800 Start timestamp: 124267813010200
+Elapsed time: 610600 Start timestamp: 124407873685000
+Elapsed time: 552300 Start timestamp: 124143783610800
+Elapsed time: 445600 Start timestamp: 124201801248900
+Elapsed time: 423200 Start timestamp: 124243808351100
+Elapsed time: 341100 Start timestamp: 124261811930600
+Elapsed time: 872100 Start timestamp: 124401871738600
+Elapsed time: 515500 Start timestamp: 124103772301100
+Elapsed time: 446900 Start timestamp: 124115774714900
+Elapsed time: 397300 Start timestamp: 124255810430300
+Elapsed time: 691000 Start timestamp: 124301829885800
+Elapsed time: 565500 Start timestamp: 124295828713100
+Elapsed time: 386800 Start timestamp: 124155785138400
+Elapsed time: 367600 Start timestamp: 124207803080400
+Elapsed time: 369200 Start timestamp: 124231806939700
+Elapsed time: 390000 Start timestamp: 124237807574800
+Elapsed time: 621500 Start timestamp: 124273814677600
+Elapsed time: 631100 Start timestamp: 124389868579500
+Elapsed time: 663100 Start timestamp: 124325835447500
+Elapsed time: 601200 Start timestamp: 124337838281800
+Elapsed time: 625200 Start timestamp: 124395870515500
+Elapsed time: 655600 Start timestamp: 124361844156000
+Elapsed time: 563700 Start timestamp: 124183796964800
+Elapsed time: 340600 Start timestamp: 124219805358600
+Elapsed time: 653300 Start timestamp: 124349841591800
+Elapsed time: 435000 Start timestamp: 124137782476500
+Elapsed time: 479800 Start timestamp: 124383859374900
+
+sub-2: elevatorStoppedTimes:
+Elapsed time: 1085200 Start timestamp: 124285818739500
+Elapsed time: 1202900 Start timestamp: 124161786524300
+Elapsed time: 908100 Start timestamp: 124413874723600
+Elapsed time: 1084300 Start timestamp: 124121775977900
+Elapsed time: 1273100 Start timestamp: 124373846482800
+
+
+
+
+sub-3: elevatorArrivalSensorTimes:
+Elapsed time: 729500 Start timestamp: 124063760159800
+Elapsed time: 835600 Start timestamp: 124069761903000
+Elapsed time: 897600 Start timestamp: 124047750011400
+
+sub-3: elevatorStoppedTimes:
+Elapsed time: 977900 Start timestamp: 124053773144600
+Elapsed time: 1445500 Start timestamp: 124019753318100
+Elapsed time: 963300 Start timestamp: 124063777670300
+
+
+sub-4: elevatorArrivalSensorTimes:
+Elapsed time: 1327700 Start timestamp: 124116768549900
+Elapsed time: 465700 Start timestamp: 124128772074400
+Elapsed time: 324300 Start timestamp: 124110767318700
+Elapsed time: 511100 Start timestamp: 124122770177400
+Elapsed time: 517900 Start timestamp: 124134773638500
+
+sub-4: elevatorStoppedTimes:

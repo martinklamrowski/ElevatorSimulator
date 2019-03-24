@@ -1,11 +1,19 @@
 ~~~
-Authors: Martin Klamrowski, Angie Byun, Tashfiq Akhand
-Last modified: 3/8/2019
+Authors: Martin Klamrowski, Angie Byun, Tashfiq Akhand, Arianna Shi, Sunjay Panesar
+Last modified: 3/23/2019
 ~~~
 
 ********** ITERATION 3 - L1 Group 4 **********
 __________________________
 TEAM MEMBERS CONTRIBUTIONS:
+
+i4:
+===
+~ Arianna Shi - timing diagram
+~ Sunjay Panesar - code for Scheduler, code for Elevator Subsystem
+~ Tashfiq Akhand - planning for GUI
+~ Martin Klamrowski - 
+~ Angie Byun - 
 
 i3:
 ===
@@ -36,16 +44,18 @@ THE ELEVATOR SIMULATOR PROJECT CONSISTS OF:
 	- 3 subsystems/directories located in L1G4_i3/ElevatorSimulator/src/ (ElevatorSystem, FloorSystem, Scheduler) 
 	- there are a total of 8 .java source files. 
 	- timing diagram for error scenario (PDF) located in /ElevatorSimulator/
+	- timing diagram for measurement (PDF) located in /ElevatorSimulator/
+	- text file containing elapsed and initial time values for requests, per scheduler thread
 	- updated class diagram (PDF) located in /ElevatorSimulator/
 	- instructions for how to open and run files. 
 _____
 SETUP:
 (FOR ECLIPSE)
 	
-	- extract the L1G4_i3.zip file
+	- extract the L1G4_i4.zip file
 	- in Eclipse navigate to File>Open Projects from File System
 	- click 'Directory'
-	- find the L1G4_i3/ElevatorSimulator/ directory and click 'Finish'
+	- find the L1G4_i4/ElevatorSimulator/ directory and click 'Finish'
 	- the main files for the system are ElevatorControl.java, Scheduler.java, FloorSubsystem.java
 _______
 RUNNING: 
@@ -105,7 +115,18 @@ In this scenario, there are two error scenarios:
 In both scenarios the Scheduler will detect the error and take the corresponding elevator out of service and will not give it anymore 
 service requests. The errors are injected through the Elevator Subsystem; lines 202 and 315 of ElevatorControl.java. 
 
+____________
+MEASUREMENTS:
 
+Code for measuring time has been implemented for iteration 3. Elapsed time values are stored in three HashMap structures. Each structure contains a Long with elapsed time as the key, and the initial time of the request as its corresponding value. Measured requests are as follows:
+	
+	-elevatorStoppedTimes: state machine has sent STOP to an elevator
+	-elevatorArrivalTimes: an elevator's arrival sensor has been triggered
+	-floorRequestTimes: the floor subsystem has given the scheduler a service request
+	
+The acquired measurements were taken under the conditions of the previous iteration. Error scenarios 1 & 2, as described above, were in effect. As a result, elevators 3 & 4 encounter faults, and elevators 1 & 2 pick up a majority of the work.
+
+The file Scheduler Timing Elapsed and Start.txt contains elapsed and start time values contained in the three previously mentioned HashMaps on program termination.
 
 
 

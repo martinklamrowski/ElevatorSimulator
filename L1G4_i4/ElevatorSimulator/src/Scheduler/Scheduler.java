@@ -15,9 +15,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.sql.Timestamp;
 
 /**
  * Class acting as the interface for the FloorSubsystem. Submits new requests to the ElevatorHandler.
@@ -76,9 +78,9 @@ public class Scheduler {
 	/* ## ---------------------------- ## */
 	
 	private Long initialTime;	
-	static CopyOnWriteArrayList<Long> floorRequestTimes; 
-	static BufferedWriter bufferedWriter;
-	static PrintWriter printWriter;
+	Map<Long,Long> floorRequestTimes;										// HashMap for storing elapsed times per service request
+//	static BufferedWriter bufferedWriter;									
+//	static PrintWriter printWriter;											// PrintWriter to write time values to file
 	
 	/**
 	 * Constructor.
@@ -86,8 +88,8 @@ public class Scheduler {
 	public Scheduler() {
 		
 		try {
-			bufferedWriter = new BufferedWriter(new FileWriter("src/output.txt"));
-		    printWriter = new PrintWriter(bufferedWriter);
+//			bufferedWriter = new BufferedWriter(new FileWriter("output.txt"));
+//		    printWriter = new PrintWriter(bufferedWriter);
 		    
 			hostSocket = new DatagramSocket(HOSTPORT);
 		}
@@ -95,8 +97,8 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
-		floorRequestTimes = new CopyOnWriteArrayList<Long>();
+
+		floorRequestTimes = new ConcurrentHashMap<Long,Long>();
 		
 		upQ1 = new ArrayBlockingQueue<String>(100);
 		downQ1 = new ArrayBlockingQueue<String>(100);
@@ -153,16 +155,18 @@ public class Scheduler {
 				listening = false;
 			}		
 			Long tempTime;
-//			floorRequestTimes.add(System.nanoTime() - initialTime);
-			tempTime = System.nanoTime() - initialTime;
-			floorRequestTimes.add(tempTime);
-			Scheduler.printWriter.printf("main: floorRequestTimes: %d\n", tempTime);
+			Long markedTime = System.nanoTime();
+			tempTime = markedTime - initialTime;
+			floorRequestTimes.put(tempTime, initialTime); 
+//			Scheduler.printWriter.printf("main: floorRequestTimes: %d, start/end: %d %d\n", 
+//					tempTime, initialTime, markedTime);
 //			Comment these two lines out to declutter console output
-			System.out.println("floorRequestTimes:");
-			for (Long l : floorRequestTimes) System.out.println(l);
+//			System.out.println("floorRequestTimes:");
+//			for (Entry<Long, Long> l : floorRequestTimes.entrySet()) 
+//				System.out.println("Elapsed time: " + l.getKey() + " Start timestamp: " + l.getValue());
 		}
 		hostSocket.close();
-        printWriter.close();
+//        printWriter.close();
 		return;
 	}
 	
@@ -373,13 +377,13 @@ public class Scheduler {
 	public static void main(String[] args) {
 		
 //		Close the PrintWriter object used for measurement when the program is terminated
-	    Runtime.getRuntime().addShutdownHook(new Thread() {
-	        @Override
-	        public void run() {
-	        	System.out.println("Closing PrintWriter");
-	            printWriter.close();
-	        }
-	    });
+//	    Runtime.getRuntime().addShutdownHook(new Thread() {
+//	        @Override
+//	        public void run() {
+//	        	System.out.println("Closing PrintWriter");
+//	            printWriter.close();
+//	        }
+//	    });
 		Scheduler scheduler = new Scheduler();
 		scheduler.run();
 	}
@@ -402,8 +406,8 @@ class ElevatorHandler extends Thread {
 	private BlockingQueue<String> upQ;				// queue with up requests
 	private BlockingQueue<String> downQ;			// queue with down requests
 	private Long initialTime;
-	private CopyOnWriteArrayList<Long> elevatorArrivalSensorTimes; 
-	private CopyOnWriteArrayList<Long> elevatorStoppedTimes; 
+	private Map<Long,Long> elevatorArrivalSensorTimes; 	// HashMap for storing elevator arrival sensor elapsed time values
+	private Map<Long,Long> elevatorStoppedTimes;	   	// HashMap for storing elapsed time values for when an elevator is stopped
 	
 	protected volatile String currentDirection;		// variable representing current direction of the elevator, to be accessed by the main thread as well
 	protected volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by the main thread as well
@@ -432,8 +436,8 @@ class ElevatorHandler extends Thread {
 			this.currentDirection = currentDirection;
 			this.status = "WORKING";
 			this.id = id;
-			elevatorArrivalSensorTimes = new CopyOnWriteArrayList<Long>();
-			elevatorStoppedTimes = new CopyOnWriteArrayList<Long>();
+			elevatorArrivalSensorTimes = new ConcurrentHashMap<Long,Long>();
+			elevatorStoppedTimes = new ConcurrentHashMap<Long,Long>();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -526,6 +530,7 @@ class ElevatorHandler extends Thread {
 		boolean keepMoving = (ins.equals(Scheduler.STOP) ? false : true); // if the elevator is already there no need for positional updates
 		String error = Scheduler.ERROR_STUCK;
 		Long tempTime;
+		Long markedTime;
 		if (!keepMoving) initialTime = System.nanoTime();
 		
 		parsedData = request.split(" ");
@@ -590,12 +595,15 @@ class ElevatorHandler extends Thread {
 					eSocket.send(cPacket);
 					
 					if (keepMoving) {
-						tempTime = System.nanoTime() - initialTime;
-						elevatorArrivalSensorTimes.add(tempTime);
-						Scheduler.printWriter.printf("sub-%d: elevatorArrivalSensorTime: %d\n", this.id, tempTime);
+						markedTime = System.nanoTime();
+						tempTime = markedTime - initialTime;
+						elevatorArrivalSensorTimes.put(tempTime, initialTime); 
+//						Scheduler.printWriter.printf("sub-%d: elevatorArrivalSensorTime: %d, start/end: %d %d\n", 
+//								this.id, tempTime, initialTime, markedTime);
 //						Comment these two lines out to declutter console output
-						System.out.printf("sub-%d: elevatorArrivalSensorTimes:\n", this.id);
-						for (Long l : elevatorArrivalSensorTimes) System.out.println(l);
+//						System.out.printf("sub-%d: elevatorArrivalSensorTimes:\n", this.id);
+//						for (Entry<Long, Long> l : elevatorArrivalSensorTimes.entrySet()) 
+//							System.out.println("Elapsed time: " + l.getKey() + " Start timestamp: " + l.getValue());
 					}
 					
 					if (!keepMoving) {
@@ -606,13 +614,16 @@ class ElevatorHandler extends Thread {
 						aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
 						System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 						System.out.println(Arrays.toString(aPacketParsed));	
-						
-						tempTime = System.nanoTime() - initialTime;
-						elevatorStoppedTimes.add(tempTime);
-						Scheduler.printWriter.printf("sub-%d: elevatorStoppedTime: %d\n", this.id, tempTime);
+
+						markedTime = System.nanoTime();
+						tempTime = markedTime - initialTime;
+						elevatorStoppedTimes.put(tempTime, initialTime); 
+//						Scheduler.printWriter.printf("sub-%d: elevatorStoppedTimes: %d, start/end: %d %d\n", 
+//								this.id, tempTime, initialTime, markedTime);
 //						Comment these two lines out to declutter console output
-						System.out.printf("sub-%d: elevatorStoppedTimes:\n", this.id);
-						for (Long l : elevatorStoppedTimes) System.out.println(l);
+//						System.out.printf("sub-%d: elevatorStoppedTimes:\n", this.id);
+//						for (Entry<Long, Long> l : elevatorStoppedTimes.entrySet()) 
+//							System.out.println("Elapsed time: " + l.getKey() + " Start timestamp: " + l.getValue());
 
 					}
 				}					
@@ -679,6 +690,7 @@ class ElevatorHandler extends Thread {
 		boolean keepMoving = true;
 		String error = Scheduler.ERROR_STUCK;
 		Long tempTime;
+		Long markedTime;
 		initialTime = System.nanoTime();
 		
 		parsedData = request.split(" ");
@@ -729,12 +741,15 @@ class ElevatorHandler extends Thread {
 					eSocket.send(cPacket);
 					
 					if (keepMoving) {
-						tempTime = System.nanoTime() - initialTime;
-						elevatorArrivalSensorTimes.add(tempTime);
-						Scheduler.printWriter.printf("sub-%d: elevatorArrivalSensorTime: %d\n", this.id, tempTime);
-//						Comment these three lines out to declutter console output
-						System.out.printf("sub-%d: elevatorArrivalSensorTimes:\n", this.id);
-						for (Long l : elevatorArrivalSensorTimes) System.out.println(l);	
+						markedTime = System.nanoTime();
+						tempTime = markedTime - initialTime;
+						elevatorArrivalSensorTimes.put(tempTime, initialTime); 
+//						Scheduler.printWriter.printf("sub-%d: elevatorArrivalSensorTime: %d, start/end: %d %d\n", 
+//								this.id, tempTime, initialTime, markedTime);
+//						Comment these two lines out to declutter console output
+//						System.out.printf("sub-%d: elevatorArrivalSensorTimes:\n", this.id);
+//						for (Entry<Long, Long> l : elevatorArrivalSensorTimes.entrySet()) 
+//							System.out.println("Elapsed time: " + l.getKey() + " Start timestamp: " + l.getValue());
 					}
 				}
 				
@@ -745,13 +760,16 @@ class ElevatorHandler extends Thread {
 				aPacketParsed = Scheduler.parsePacket(aPacket.getData());				
 				System.out.println(String.format("sub-%d: received ack ( string >> %s, byte array >> %s ).", this.id, new String(aPacket.getData()), aPacket.getData()));
 				System.out.println(Arrays.toString(aPacketParsed));
-				
-				tempTime = System.nanoTime() - initialTime;
-				elevatorStoppedTimes.add(tempTime);
-				Scheduler.printWriter.printf("sub-%d: elevatorStoppedTime: %d\n", this.id, tempTime);
-//				Comment these three lines out to declutter console output
-				System.out.printf("sub-%d: elevatorStoppedTimes:\n", this.id);
-				for (Long l : elevatorStoppedTimes) System.out.println(l);
+
+				markedTime = System.nanoTime();
+				tempTime = markedTime - initialTime;
+				elevatorStoppedTimes.put(tempTime, initialTime); 
+//				Scheduler.printWriter.printf("sub-%d: elevatorStoppedTimes: %d, start/end: %d %d\n", 
+//						this.id, tempTime, initialTime, markedTime);
+//				Comment these two lines out to declutter console output
+//				System.out.printf("sub-%d: elevatorStoppedTimes:\n", this.id);
+//				for (Entry<Long, Long> l : elevatorStoppedTimes.entrySet()) 
+//					System.out.println("Elapsed time: " + l.getKey() + " Start timestamp: " + l.getValue());
 				
 				error = Scheduler.ERROR_DOOR_JAM;
 				
@@ -850,10 +868,10 @@ class ElevatorHandler extends Thread {
 	}
 	public void writeTimesToFile() throws FileNotFoundException, IOException {
 		
-		System.out.printf("sub-%d: elevatorArrivalSensorTimes: dropoff\n", this.id);
-		for (Long l : elevatorArrivalSensorTimes) Scheduler.printWriter.println(l);	
-		System.out.printf("sub-%d: elevatorStoppedTimes: dropoff\n", this.id);
-		for (Long l : elevatorStoppedTimes) Scheduler.printWriter.println(l);
+//		System.out.printf("sub-%d: elevatorArrivalSensorTimes: dropoff\n", this.id);
+//		for (Long l : elevatorArrivalSensorTimes) Scheduler.printWriter.println(l);	
+//		System.out.printf("sub-%d: elevatorStoppedTimes: dropoff\n", this.id);
+//		for (Long l : elevatorStoppedTimes) Scheduler.printWriter.println(l);
 		
 	}
 }
