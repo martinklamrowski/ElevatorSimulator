@@ -48,7 +48,7 @@ Elapsed time: 1476500 Start timestamp: 124053751560500
 Elapsed time: 1034300 Start timestamp: 124257834656300
 Elapsed time: 1202100 Start timestamp: 124147790601900
 
-
+Time values are in nanoseconds
 
 
 sub-2: elevatorArrivalSensorTimes:
