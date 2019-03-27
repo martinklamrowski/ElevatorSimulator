@@ -596,13 +596,15 @@ class ElevatorHandler extends Thread {
 						for (Iterator<String> iterator = pickList.iterator(); iterator.hasNext();) {
 							temp = iterator.next().split(" ");
 							if (temp[1].equals(dropDirection) & temp[0].equals(rPacketParsed[1])) {
-								stop = true; 			// can pickup this request already
-								floorLampUpdate = true;	// update floor lamps
-								drops.add(temp[2]);		// add the dropoff to the HashSet
-								iterator.remove();		// remove; request is being handled
+								stop = true; 				// can pickup this request already
+								floorLampUpdate = true;		// update floor lamps							
+								iterator.remove();			// remove; request is being handled
 								
-								// turn on elevator lamp at destination floor
-								elevatorLampChanges += temp[2] + " ";
+								// turn on elevator lamp at destination floor; do not update if theres already a dropoff for that floor
+								if (!drops.contains(temp[2])) {
+									drops.add(temp[2]);		// add the dropoff to the HashSet
+									elevatorLampChanges += temp[2] + " ";
+								}								
 							}
 						}
 					}
