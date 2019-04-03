@@ -1,5 +1,6 @@
 package elevatorSubsystem;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -61,6 +62,7 @@ public class ElevatorSubsystem {
 	 */
 	public static void main(String[] args) {
 		ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+		View v = new View();
 		elevatorSubsystem.run();	
 	}
 	
@@ -72,6 +74,7 @@ public class ElevatorSubsystem {
 	 *
 	 */
 	private class Elevator extends Thread {		
+		View v;
 		
 		final int PORT;
 		final int ID;
@@ -181,6 +184,7 @@ public class ElevatorSubsystem {
 								ioe.printStackTrace();
 							    System.exit(1);
 							}
+							
 							System.out.println("ELEVATOR " + ID + ": " + (rPacketParsed[1].equals(UP) ? "UP" : "DOWN") + " to " + currentFloor);
 						}						
 						
@@ -256,11 +260,15 @@ public class ElevatorSubsystem {
 		int move(String cmd) {
 			
 			if (cmd.equals(UP) | cmd.equals(DOWN)) {
+				for (int i=0; i<22; i++) {
+		    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
+		    	}
 				try {
 					Thread.sleep(6000);
 				} catch (InterruptedException ie) {
 					ie.printStackTrace();
 				}
+				v.getElevatorfloors((cmd.equals(UP) ? currentFloor + 1 : currentFloor - 1), ID).setBackground(Color.BLACK);
 				currentFloor = (cmd.equals(UP) ? currentFloor + 1 : currentFloor - 1);
 				
 			}
@@ -276,6 +284,7 @@ public class ElevatorSubsystem {
 			if (ID == 4 & currentFloor == 15) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE MOVING at Floor " + currentFloor);
+					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
 				catch (Exception e) {
@@ -288,6 +297,7 @@ public class ElevatorSubsystem {
 			if (ID == 3 & currentFloor == 5) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE OPENING at Floor " + currentFloor);
+					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
 				catch (Exception e) {
