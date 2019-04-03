@@ -1,11 +1,14 @@
 package ElevatorSystem;
 
+import java.awt.Color;
+
 /**
  * this is the class declare the elevator object 
  * @author ariannashi
  *
  */
 public class Elevator implements Runnable {
+	private View v;
 	public String currentFloor;
 	public ElevatorDirection direction;
 	int[] Lamp = new int[MAX_FLOOR];
@@ -37,6 +40,10 @@ public class Elevator implements Runnable {
 		
 	    if (direction == ElevatorDirection.E_UP && pos < MAX_FLOOR) {
 	    	// wait 6 seconds and move
+	    	for (int i=0; i<22; i++) {
+	    		v.getElevatorfloors(i, ElevatorControl.getNum_elevator()).setBackground(Color.BLUE);
+	    	}
+			
 		    try {
 		    	Thread.sleep(6000);
 		    } catch (InterruptedException e) {
@@ -44,17 +51,21 @@ public class Elevator implements Runnable {
 		    	System.exit(1);
 		    }
 	    	pos += 1;
+	    	v.getElevatorfloors(pos+1, ElevatorControl.getNum_elevator()).setBackground(Color.BLACK);
 	        this.currentFloor = Integer.toString(pos);
 	        // Send pos
 	    } else if (direction == ElevatorDirection.E_DOWN && pos > 1) {
 	    	// wait 6 seconds and move
-		    try {
+	    	for (int i=0; i<22; i++) {
+	    		v.getElevatorfloors(i, ElevatorControl.getNum_elevator()).setBackground(Color.BLUE);
+	    	}		    try {
 		    	Thread.sleep(6000);
 		    } catch (InterruptedException e) {
 		    	e.printStackTrace();
 		    	System.exit(1);
 		    }
 	    	pos -= 1;
+	    	v.getElevatorfloors(pos-1, ElevatorControl.getNum_elevator()).setBackground(Color.BLACK);
 	        this.currentFloor = Integer.toString(pos);
 	        // send pos
 	    } else if ( direction == ElevatorDirection.E_HOLD) {

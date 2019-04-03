@@ -1,6 +1,7 @@
 package ElevatorSystem;
 
 
+import java.awt.Color;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,6 +16,8 @@ import java.net.UnknownHostException;
  *
  */
 public class ElevatorControl extends Thread{
+	private View v;
+	
 	/* ## HEADER AND COMMAND IDENTIFIERS ## */
 	private static final String ERROR = "0";
 	private static final String ACK = "1";
@@ -34,7 +37,15 @@ public class ElevatorControl extends Thread{
 	
 	
 	/*	variable identifies	 */
-	private int num_elevator = 0; 
+	private static int num_elevator; 
+	public static int getNum_elevator() {
+		return num_elevator;
+	}
+
+	public void setNum_elevator(int num_elevator) {
+		this.num_elevator = num_elevator;
+	}
+
 	private int num_lamp = 0;
 	private static int send = 0;
 	private static int s_elevator = 0;		//elevator status	1: pickup, lamp ON		0:drop off, lamp OFF
@@ -172,6 +183,10 @@ public class ElevatorControl extends Thread{
 
 				case UP_PICKUP:	
 					System.out.println("cmd, UP for pick up");
+					for(int i=0; i<2; i++) {
+						v.getElevatorDirections(i, num_elevator).setBackground(Color.WHITE);
+					}
+					v.getElevatorDirections(0, num_elevator).setBackground(Color.GREEN);
 					System.out.println("ELEVATOR " + num_elevator + ": wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					send = 0;
@@ -189,6 +204,10 @@ public class ElevatorControl extends Thread{
 
 				case DOWN_PICKUP:
 					System.out.println("cmd, DOWN for pick up");
+					for(int i=0; i<2; i++) {
+						v.getElevatorDirections(i, num_elevator).setBackground(Color.WHITE);
+					}
+					v.getElevatorDirections(1, num_elevator).setBackground(Color.GREEN);
 					System.out.println("ELEVATOR " + num_elevator + ": wait for elevator data ");
 					s_elevator = 1;		// elevator job pick up
 					send = 0;
@@ -203,6 +222,7 @@ public class ElevatorControl extends Thread{
 					if (num_elevator == 3 & elevator.getCurrentFloor().equals("5")) {
 						try {
 							System.out.println("ELEVATOR " + num_elevator + " is STUCK at Floor " + elevator.getCurrentFloor());
+							v.getElevatorfloors(Integer.parseInt(elevator.getCurrentFloor()), num_elevator).setBackground(Color.RED);
 							Thread.sleep(10000);
 						}
 						catch (Exception e) {
@@ -316,6 +336,7 @@ public class ElevatorControl extends Thread{
 				if (num_elevator == 4 & elevator.getCurrentFloor().equals("15")) {
 					try {
 						System.out.println("ELEVATOR " + num_elevator + " is STUCK at Floor " + elevator.getCurrentFloor());
+						v.getElevatorfloors(Integer.parseInt(elevator.getCurrentFloor()), num_elevator).setBackground(Color.RED);
 						Thread.sleep(10000);
 					}
 					catch (Exception e) {
@@ -383,9 +404,11 @@ public class ElevatorControl extends Thread{
 				switch (error[1]) {
 				case ERROR_DOOR_JAM:
 					System.out.println("!!!ERROR DOOR JAM!!! ELEVATOR SERVICE POSTPONED");
+					v.getElevatorfloors(Integer.parseInt(elevator.getCurrentFloor()), num_elevator).setBackground(Color.RED);
 					break;
 				case ERROR_STUCK:
 					System.out.println("!!!ERROR ELEVATOR STUCK!!! ELEVATOR SERVICE POSTPONED");
+					v.getElevatorfloors(Integer.parseInt(elevator.getCurrentFloor()), num_elevator).setBackground(Color.RED);
 					break;
 				}				
 				try {					
@@ -407,6 +430,8 @@ public class ElevatorControl extends Thread{
 	 *  main function of the ElevatorControl class 
 	 */
 	public static void main(String[] args) {
+		View v = new View();
+		
 		Elv_1 = new ElevatorControl(3137, 1, "1");
 		Elv_2 = new ElevatorControl(3237, 2, "1");
 		Elv_3 = new ElevatorControl(3337, 3, "10");
