@@ -230,7 +230,15 @@ public class ElevatorSubsystem {
 						
 						if (lampChange) {
 							System.out.println("ELEVATOR " + ID + ": lamps on at [" + lampSet.toString() + "]");
+							v.getLamps(ID).setBackground(Color.YELLOW);
+							try {
+								Thread.sleep(2000);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 							lampChange = false;
+							v.getLamps(ID).setBackground(Color.WHITE);
 						}
 						
 						break;

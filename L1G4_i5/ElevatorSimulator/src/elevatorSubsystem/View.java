@@ -10,7 +10,7 @@ public class View extends JFrame{
 	private JPanel panel;
 	private JTextField[][] elevatorfloors = new JTextField[22][4];
 	private JTextField[][] elevatorDirections = new JTextField[2][4];
-//	private JTextField[] lamps = new JTextField[4];
+	private JTextField[] lamps = new JTextField[4];
 		
 	
 
@@ -53,11 +53,11 @@ public class View extends JFrame{
 			}
 			
 		}
-//		for(int i = 0; i<4; i++) {
-//			lamps[i] = new JTextField("Lamp");
-//			panel.add(lamps[i]);
-//			lamps[i].setEnabled(false);
-//		}
+		for(int i = 0; i<4; i++) {
+			lamps[i] = new JTextField("Lamp");
+			panel.add(lamps[i]);
+			lamps[i].setEnabled(false);
+		}
 		this.setVisible(true);
 		panel.setVisible(true);
 		panel.setBackground(Color.GRAY);
@@ -86,12 +86,12 @@ public class View extends JFrame{
 		this.elevatorDirections = elevatorDirections;
 	}
 
-//	public JTextField getLamps(int i) {
-//		return lamps[i];
-//	}
-//
-//	public void setLamps(JTextField[] lamps) {
-//		this.lamps = lamps;
-//	}
+	public JTextField getLamps(int i) {
+		return lamps[i];
+	}
+
+	public void setLamps(JTextField[] lamps) {
+		this.lamps = lamps;
+	}
 
 }
