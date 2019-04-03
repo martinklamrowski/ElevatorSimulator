@@ -186,6 +186,15 @@ public class ElevatorSubsystem {
 							}
 							
 							System.out.println("ELEVATOR " + ID + ": " + (rPacketParsed[1].equals(UP) ? "UP" : "DOWN") + " to " + currentFloor);
+							for(int i=0; i<2; i++) {
+								v.getElevatorDirections(i, ID).setBackground(Color.WHITE);
+							}
+							if (rPacketParsed[1].equals("UP")) {
+								v.getElevatorDirections(0, ID).setBackground(Color.GREEN);
+							}
+							else if (rPacketParsed[1].equals("DOWN")) {
+								v.getElevatorDirections(1, ID).setBackground(Color.GREEN);
+							}
 						}						
 						
 						break;						
@@ -284,6 +293,9 @@ public class ElevatorSubsystem {
 			if (ID == 4 & currentFloor == 15) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE MOVING at Floor " + currentFloor);
+					for (int i=0; i<22; i++) {
+			    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
+			    	}
 					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
@@ -297,6 +309,9 @@ public class ElevatorSubsystem {
 			if (ID == 3 & currentFloor == 5) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE OPENING at Floor " + currentFloor);
+					for (int i=0; i<22; i++) {
+			    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
+			    	}
 					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
