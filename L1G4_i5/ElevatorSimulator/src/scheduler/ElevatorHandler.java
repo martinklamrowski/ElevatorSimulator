@@ -26,6 +26,7 @@ class ElevatorHandler extends Thread {
 	private List<String> pickList;					// ArrayList with requests
 	
 	protected volatile String currentDirection;		// variable representing current direction of the elevator, to be accessed by the main thread as well
+	protected volatile String liveDirection;		// variable used by the GUI representing the direction of the elevator
 	protected volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by the main thread as well
 	protected volatile String status;				// is elevator out of order or not
 	protected int id;								// number identifier
@@ -51,6 +52,7 @@ class ElevatorHandler extends Thread {
 			this.pickList = pickList;
 			this.currentFloor = currentFloor;
 			this.currentDirection = "";
+			this.liveDirection = "";
 			this.status = status;
 			this.id = id;
 			
@@ -151,6 +153,7 @@ class ElevatorHandler extends Thread {
 			try {				
 				// repositioning elevator; sending to first pickup location
 				if (!initialDirection.equals("STOP")) {
+					liveDirection = initialDirection;
 					cPacket = createPacket(CMD, (initialDirection.equals("UP") ? UP : DOWN), eport);
 					
 					while (status.equals("REPO")) {					
@@ -186,7 +189,7 @@ class ElevatorHandler extends Thread {
 						
 						if (rPacketParsed[1].equals(initialPickup)) {
 							status = "WORKING";
-							currentDirection = dropDirection;							
+							currentDirection = dropDirection;
 						}
 					}
 				}
@@ -194,7 +197,8 @@ class ElevatorHandler extends Thread {
 					status = "WORKING";
 					currentDirection = dropDirection;
 					cPacket = createPacket(CMD, STOP, eport);
-				}				
+				}
+				liveDirection = dropDirection;
 				
 				// send stop
 				cPacket = createPacket(CMD, STOP, eport);
@@ -388,6 +392,7 @@ class ElevatorHandler extends Thread {
 					if (drops.isEmpty()) {							
 						// end sequence
 						status = "IDLE";
+						liveDirection = "";
 					}
 					else {
 						System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@RESET");

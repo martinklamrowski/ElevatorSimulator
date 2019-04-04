@@ -6,8 +6,13 @@
  */
 package scheduler;
 
+import java.awt.Color;
 import java.net.*;
 import java.util.*;
+
+import javax.swing.JTextField;
+
+import scheduler.View;
 import static utils.UtilClass.*;
 
 
@@ -42,6 +47,8 @@ public class Scheduler {
 	private ElevatorHandler handler2;
 	private ElevatorHandler handler3;
 	private ElevatorHandler handler4;
+	
+	private View window;															// GUI class
 	/* ## ---------------------------- ## */
 	
 	
@@ -52,6 +59,7 @@ public class Scheduler {
 		
 		try {
 			hostSocket = new DatagramSocket(HOSTPORT);
+			hostSocket.setSoTimeout(500);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -67,6 +75,8 @@ public class Scheduler {
 		handler2 = new ElevatorHandler(EPORT2, FPORT, pickList2, 1, "IDLE", 2);
 		handler3 = new ElevatorHandler(EPORT3, FPORT, pickList3, 10, "IDLE", 3);
 		handler4 = new ElevatorHandler(EPORT4, FPORT, pickList4, 20, "IDLE", 4);
+		
+		window = new View();
 	}
 	
 	
@@ -88,23 +98,84 @@ public class Scheduler {
 		// receive requests from FloorSubsystem
 		while (listening) {
 			try {
-				hostSocket.receive(rPacket);
-				System.out.println(String.format("main: received packet ( string >> %s, byte array >> %s ).\n", new String(rPacket.getData()), rPacket.getData()));
+				/* ## GUI ## */
+				// reset
+				for (int i = 0; i<22; i++) {
+					for(int j=0; j<4; j++) {
+						window.getElevatorfloors(i, j).setBackground(Color.BLUE);
+					}					
+				}
 				
+				// elevator 1
+				if (!handler1.status.equals("SUSPENDED")) {
+					window.getElevatorDirections(0, 0).setBackground(Color.WHITE);
+					window.getElevatorDirections(1, 0).setBackground(Color.WHITE);
+					if (!handler1.liveDirection.equals("")) {
+						window.getElevatorDirections((handler1.liveDirection.equals("UP") ? 0 : 1), 0).setBackground(Color.GREEN);
+					}
+					window.getElevatorfloors(22 - handler1.currentFloor, 0).setBackground(Color.BLACK);
+				}
+				else {
+					window.getElevatorfloors(22 - handler1.currentFloor, 0).setBackground(Color.RED);
+				}
+				
+				// elevator 2
+				if (!handler2.status.equals("SUSPENDED")) {
+					window.getElevatorDirections(0, 1).setBackground(Color.WHITE);
+					window.getElevatorDirections(1, 1).setBackground(Color.WHITE);
+					if (!handler2.liveDirection.equals("")) {
+						window.getElevatorDirections((handler2.liveDirection.equals("UP") ? 0 : 1), 1).setBackground(Color.GREEN);
+					}
+					window.getElevatorfloors(22 - handler2.currentFloor, 1).setBackground(Color.BLACK);
+				}
+				else {
+					window.getElevatorfloors(22 - handler2.currentFloor, 1).setBackground(Color.RED);
+				}
+				
+				// elevator 3
+				if (!handler3.status.equals("SUSPENDED")) {
+					window.getElevatorDirections(0, 2).setBackground(Color.WHITE);
+					window.getElevatorDirections(1, 2).setBackground(Color.WHITE);
+					if (!handler3.liveDirection.equals("")) {
+						window.getElevatorDirections((handler3.liveDirection.equals("UP") ? 0 : 1), 2).setBackground(Color.GREEN);
+					}
+					window.getElevatorfloors(22 - handler3.currentFloor, 2).setBackground(Color.BLACK);
+				}
+				else {
+					window.getElevatorfloors(22 - handler3.currentFloor, 2).setBackground(Color.RED);
+				}
+				
+				// elevator 4
+				if (!handler4.status.equals("SUSPENDED")) {
+					window.getElevatorDirections(0, 3).setBackground(Color.WHITE);
+					window.getElevatorDirections(1, 3).setBackground(Color.WHITE);
+					if (!handler4.liveDirection.equals("")) {
+						window.getElevatorDirections((handler4.liveDirection.equals("UP") ? 0 : 1), 3).setBackground(Color.GREEN);
+					}
+					window.getElevatorfloors(22 - handler4.currentFloor, 3).setBackground(Color.BLACK);
+				}
+				else {
+					window.getElevatorfloors(22 - handler4.currentFloor, 3).setBackground(Color.RED);
+				}
+				/* ##     ## */
+				try {
+					hostSocket.receive(rPacket);
+					System.out.println(String.format("main: received packet ( string >> %s, byte array >> %s ).\n", new String(rPacket.getData()), rPacket.getData()));
+				} catch (SocketTimeoutException ste) {
+					continue;
+				}
 				// handling packet
 				String[] rPacketParsed = parsePacket(rPacket.getData());
 				
 				// CMD
 				if (rPacketParsed[0].equals(CMD)) {					
-					
 					handleFloorCommand(rPacketParsed[1], rPacket.getPort());				
 				}
 				// something else
 				else {
 					System.out.println("main: unknown packet.");
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				listening = false;
 			}			

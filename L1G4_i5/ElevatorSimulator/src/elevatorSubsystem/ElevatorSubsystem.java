@@ -1,6 +1,5 @@
 package elevatorSubsystem;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,7 +61,6 @@ public class ElevatorSubsystem {
 	 */
 	public static void main(String[] args) {
 		ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-		View v = new View();
 		elevatorSubsystem.run();	
 	}
 	
@@ -74,7 +72,6 @@ public class ElevatorSubsystem {
 	 *
 	 */
 	private class Elevator extends Thread {		
-		View v;
 		
 		final int PORT;
 		final int ID;
@@ -184,17 +181,7 @@ public class ElevatorSubsystem {
 								ioe.printStackTrace();
 							    System.exit(1);
 							}
-							
 							System.out.println("ELEVATOR " + ID + ": " + (rPacketParsed[1].equals(UP) ? "UP" : "DOWN") + " to " + currentFloor);
-							for(int i=0; i<2; i++) {
-								v.getElevatorDirections(i, ID).setBackground(Color.WHITE);
-							}
-							if (rPacketParsed[1].equals("UP")) {
-								v.getElevatorDirections(0, ID).setBackground(Color.GREEN);
-							}
-							else if (rPacketParsed[1].equals("DOWN")) {
-								v.getElevatorDirections(1, ID).setBackground(Color.GREEN);
-							}
 						}						
 						
 						break;						
@@ -230,15 +217,7 @@ public class ElevatorSubsystem {
 						
 						if (lampChange) {
 							System.out.println("ELEVATOR " + ID + ": lamps on at [" + lampSet.toString() + "]");
-							v.getLamps(ID).setBackground(Color.YELLOW);
-							try {
-								Thread.sleep(2000);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
 							lampChange = false;
-							v.getLamps(ID).setBackground(Color.WHITE);
 						}
 						
 						break;
@@ -277,15 +256,11 @@ public class ElevatorSubsystem {
 		int move(String cmd) {
 			
 			if (cmd.equals(UP) | cmd.equals(DOWN)) {
-				for (int i=0; i<22; i++) {
-		    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
-		    	}
 				try {
 					Thread.sleep(6000);
 				} catch (InterruptedException ie) {
 					ie.printStackTrace();
 				}
-				v.getElevatorfloors((cmd.equals(UP) ? currentFloor + 1 : currentFloor - 1), ID).setBackground(Color.BLACK);
 				currentFloor = (cmd.equals(UP) ? currentFloor + 1 : currentFloor - 1);
 				
 			}
@@ -301,10 +276,6 @@ public class ElevatorSubsystem {
 			if (ID == 4 & currentFloor == 15) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE MOVING at Floor " + currentFloor);
-					for (int i=0; i<22; i++) {
-			    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
-			    	}
-					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
 				catch (Exception e) {
@@ -317,10 +288,6 @@ public class ElevatorSubsystem {
 			if (ID == 3 & currentFloor == 5) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE OPENING at Floor " + currentFloor);
-					for (int i=0; i<22; i++) {
-			    		v.getElevatorfloors(i, ID).setBackground(Color.BLUE);
-			    	}
-					v.getElevatorfloors(currentFloor, ID).setBackground(Color.RED);
 					Thread.sleep(10000);
 				}
 				catch (Exception e) {
