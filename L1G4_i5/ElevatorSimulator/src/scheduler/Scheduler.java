@@ -9,9 +9,6 @@ package scheduler;
 import java.awt.Color;
 import java.net.*;
 import java.util.*;
-
-import javax.swing.JTextField;
-
 import scheduler.View;
 import static utils.UtilClass.*;
 

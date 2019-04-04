@@ -33,7 +33,7 @@ public class View extends JFrame{
 		
 		for (int i = 0; i<22; i++) {
 			for(int j=0; j<4; j++) {
-				elevatorfloors[i][j] = new JTextField();
+				elevatorfloors[i][j] = new JTextField(String.format("%d", 22 - i));
 				elevatorfloors[i][j].setBackground(Color.BLUE);
 				panel.add(elevatorfloors[i][j]);
 				elevatorfloors[i][j].setEnabled(false);
