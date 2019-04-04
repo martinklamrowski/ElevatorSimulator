@@ -33,6 +33,7 @@ class ElevatorHandler extends Thread {
 	protected volatile String liveDirection;		// variable used by the GUI representing the direction of the elevator
 	protected volatile boolean pickingUp = false;	// variable used by the GUI to determine whether the light at this floor should be turned off
 	
+	
 	/**
 	 * Constructor. Takes the elevator port, floor port, request List, starting floor, status, number id.
 	 * 
@@ -96,25 +97,29 @@ class ElevatorHandler extends Thread {
 				if (!pickList.isEmpty()) {
 					bestDistance = 100;
 					bestRequest = "";
+					int holderCurrentFloor = currentFloor;
+					
 					for (Iterator<String> iterator = pickList.iterator(); iterator.hasNext();) {
 						request = iterator.next();
 						temp = request.split(" ");
-						if (Math.abs(Integer.parseInt(temp[0]) - currentFloor) < bestDistance) {
+						
+						// computing closest next available pickup
+						if (Math.abs(Integer.parseInt(temp[0]) - holderCurrentFloor) < bestDistance) {
 							bestRequest = request;
 							bestDistance = Integer.parseInt(temp[0]) - currentFloor;
 						}
 					}
 					pickList.remove(bestRequest);
 					
-					requestParsed = bestRequest.split(" ");
+					requestParsed = bestRequest.split(" ");					
 					
 					// elevator is above first pickup in sequence
-					if (Integer.parseInt(requestParsed[0]) < currentFloor) {
+					if (Integer.parseInt(requestParsed[0]) < holderCurrentFloor) {
 						status = "REPO";
 						initialDirection = "DOWN";
 					}
 					// elevator is below first pickup in sequence
-					else if (Integer.parseInt(requestParsed[0]) > currentFloor) {
+					else if (Integer.parseInt(requestParsed[0]) > holderCurrentFloor) {
 						status = "REPO";
 						initialDirection = "UP";
 					}
@@ -336,8 +341,8 @@ class ElevatorHandler extends Thread {
 					}
 					// are there dropoffs for this floor?
 					if (drops.contains(rPacketParsed[1])) {
-						stop = true;					// will need to stop
-						drops.remove(rPacketParsed[1]);	// remove; dropoff being handled
+						stop = true;							// will need to stop
+						drops.remove(rPacketParsed[1]);			// remove; dropoff being handled
 						
 						// turn off elevator lamp at this floor
 						elevatorLampChanges += rPacketParsed[1] + " ";
