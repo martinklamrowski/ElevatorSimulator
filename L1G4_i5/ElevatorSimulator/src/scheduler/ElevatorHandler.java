@@ -26,11 +26,12 @@ class ElevatorHandler extends Thread {
 	private List<String> pickList;					// ArrayList with requests
 	
 	protected volatile String currentDirection;		// variable representing current direction of the elevator, to be accessed by the main thread as well
-	protected volatile String liveDirection;		// variable used by the GUI representing the direction of the elevator
 	protected volatile int currentFloor;			// variable representing current floor of the elevator, to be accessed by the main thread as well
 	protected volatile String status;				// is elevator out of order or not
 	protected int id;								// number identifier
 	
+	protected volatile String liveDirection;		// variable used by the GUI representing the direction of the elevator
+	protected volatile boolean pickingUp = false;	// variable used by the GUI to determine whether the light at this floor should be turned off
 	
 	/**
 	 * Constructor. Takes the elevator port, floor port, request List, starting floor, status, number id.
@@ -71,7 +72,10 @@ class ElevatorHandler extends Thread {
 		
 		boolean running = true;
 		String request;
+		int bestDistance;						// determining which request to serve first
+		String bestRequest;
 		String[] requestParsed;
+		String[] temp;
 		String initialDirection = null;
 		System.out.println(String.format("sub-%d: a new thread is running.", this.id));		
 		
@@ -90,11 +94,19 @@ class ElevatorHandler extends Thread {
 		while (running) {
 			if (status.equals("IDLE")) {
 				if (!pickList.isEmpty()) {
+					bestDistance = 100;
+					bestRequest = "";
+					for (Iterator<String> iterator = pickList.iterator(); iterator.hasNext();) {
+						request = iterator.next();
+						temp = request.split(" ");
+						if (Math.abs(Integer.parseInt(temp[0]) - currentFloor) < bestDistance) {
+							bestRequest = request;
+							bestDistance = Integer.parseInt(temp[0]) - currentFloor;
+						}
+					}
+					pickList.remove(bestRequest);
 					
-					request = pickList.get(0);
-					pickList.remove(0);
-					
-					requestParsed = request.split(" ");
+					requestParsed = bestRequest.split(" ");
 					
 					// elevator is above first pickup in sequence
 					if (Integer.parseInt(requestParsed[0]) < currentFloor) {
@@ -113,7 +125,7 @@ class ElevatorHandler extends Thread {
 					}
 					
 					// pass the first pickup floor and direction to get there, and the dropoff associated for that pickup
-					doStuff(request, initialDirection);
+					doStuff(bestRequest, initialDirection);
 				}
 			}
 		}			
@@ -198,7 +210,9 @@ class ElevatorHandler extends Thread {
 					currentDirection = dropDirection;
 					cPacket = createPacket(CMD, STOP, eport);
 				}
+				// GUI updates
 				liveDirection = dropDirection;
+				pickingUp = true;
 				
 				// send stop
 				cPacket = createPacket(CMD, STOP, eport);
@@ -265,6 +279,8 @@ class ElevatorHandler extends Thread {
 				cPacket = createPacket(CMD, (dropDirection.equals("UP") ? UP : DOWN), eport);
 				
 				while (status.equals("WORKING")) {
+					pickingUp = false;
+					
 					System.out.println(String.format("sub-%d: forwarding command packet ( string >> %s, byte array >> %s ).", this.id, new String(cPacket.getData()), cPacket.getData()));
 					
 					// send cmd
@@ -299,17 +315,22 @@ class ElevatorHandler extends Thread {
 					if (!pickList.isEmpty()) {						
 						for (Iterator<String> iterator = pickList.iterator(); iterator.hasNext();) {
 							temp = iterator.next().split(" ");
-							if (temp[1].equals(dropDirection) & temp[0].equals(rPacketParsed[1])) {
-								stop = true; 				// can pickup this request already
-								floorLampUpdate = true;		// update floor lamps
-								iterator.remove();			// remove; request is being handled
-								
-								// turn on elevator lamp at destination floor; do not update if theres already a dropoff for that floor
-								if (!drops.contains(temp[2])) {
-									drops.add(temp[2]);		// add the dropoff to the HashSet
-									elevatorLampChanges += temp[2] + " ";
+							if (temp[0].equals(rPacketParsed[1])) {
+								if (temp[1].equals(dropDirection)) {
+									stop = true; 				// can pickup this request already
+									floorLampUpdate = true;		// update floor lamps
+									iterator.remove();			// remove; request is being handled
+									pickingUp = true;			// update GUI lamps
+									
+									// turn on elevator lamp at destination floor; do not update if theres already a dropoff for that floor
+									if (!drops.contains(temp[2])) {
+										drops.add(temp[2]);		// add the dropoff to the HashSet
+										elevatorLampChanges += temp[2] + " ";
+									}
 								}
-								
+								else {
+									pickingUp = false;			// undo update GUI lamps if theres another pickup going the other way
+								}
 							}
 						}
 					}
@@ -410,6 +431,7 @@ class ElevatorHandler extends Thread {
 				eSocket.send(ePacket);
 				
 				eSocket.receive(rPacket);
+				currentFloor = (dropDirection.equals("UP")) ? currentFloor - 1 : currentFloor + 1;
 				status = "SUSPENDED";
 				
 				return;

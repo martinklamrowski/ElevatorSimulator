@@ -285,7 +285,7 @@ public class ElevatorSubsystem {
 			/* ### END OF ERROR INJECTION ### */
 			
 			/* ### THERE IS A FAULTY SENSOR IN SHAFT 3 AT FLOOR 5 ### */
-			if (ID == 3 & currentFloor == 5) {
+			if (ID == 3 & currentFloor == 8) {
 				try {
 					System.out.println("ELEVATOR " + ID + " is STUCK WHILE OPENING at Floor " + currentFloor);
 					Thread.sleep(10000);

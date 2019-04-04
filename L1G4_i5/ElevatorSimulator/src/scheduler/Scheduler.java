@@ -45,7 +45,8 @@ public class Scheduler {
 	private ElevatorHandler handler3;
 	private ElevatorHandler handler4;
 	
-	private View window;															// GUI class
+	private View window;													// GUI class
+	private int[][] guiLamps;												// lamps to light in GUI									
 	/* ## ---------------------------- ## */
 	
 	
@@ -74,6 +75,8 @@ public class Scheduler {
 		handler4 = new ElevatorHandler(EPORT4, FPORT, pickList4, 20, "IDLE", 4);
 		
 		window = new View();
+		guiLamps = new int[4][22];
+		System.out.println(guiLamps);
 	}
 	
 	
@@ -83,6 +86,7 @@ public class Scheduler {
 	public void run() {
 		System.out.println("main: running.");
 		boolean listening = true;
+		boolean blink = true;
 		
 		byte[] buffer = new byte[8];
 		DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);			// received packet		
@@ -98,8 +102,14 @@ public class Scheduler {
 				/* ## GUI ## */
 				// reset
 				for (int i = 0; i<22; i++) {
-					for(int j=0; j<4; j++) {
-						window.getElevatorfloors(i, j).setBackground(Color.BLUE);
+					for(int j=0; j<4; j++) {						
+						if (/*blink & */guiLamps[j][i] == 1) {						
+							window.getElevatorfloors(i, j).setBackground(Color.PINK);
+						}
+						else {
+							window.getElevatorfloors(i, j).setBackground(Color.BLUE);
+						}
+						
 					}					
 				}
 				
@@ -111,9 +121,12 @@ public class Scheduler {
 						window.getElevatorDirections((handler1.liveDirection.equals("UP") ? 0 : 1), 0).setBackground(Color.GREEN);
 					}
 					window.getElevatorfloors(22 - handler1.currentFloor, 0).setBackground(Color.BLACK);
+					if (handler1.pickingUp) {guiLamps[0][22 - handler1.currentFloor] = 0;}
 				}
 				else {
-					window.getElevatorfloors(22 - handler1.currentFloor, 0).setBackground(Color.RED);
+					if (blink) {
+						window.getElevatorfloors(22 - handler1.currentFloor, 0).setBackground(Color.RED);
+					}
 				}
 				
 				// elevator 2
@@ -124,9 +137,12 @@ public class Scheduler {
 						window.getElevatorDirections((handler2.liveDirection.equals("UP") ? 0 : 1), 1).setBackground(Color.GREEN);
 					}
 					window.getElevatorfloors(22 - handler2.currentFloor, 1).setBackground(Color.BLACK);
+					if (handler2.pickingUp) {guiLamps[1][22 - handler2.currentFloor] = 0;}
 				}
 				else {
-					window.getElevatorfloors(22 - handler2.currentFloor, 1).setBackground(Color.RED);
+					if (blink) {
+						window.getElevatorfloors(22 - handler2.currentFloor, 1).setBackground(Color.RED);
+					}
 				}
 				
 				// elevator 3
@@ -137,9 +153,12 @@ public class Scheduler {
 						window.getElevatorDirections((handler3.liveDirection.equals("UP") ? 0 : 1), 2).setBackground(Color.GREEN);
 					}
 					window.getElevatorfloors(22 - handler3.currentFloor, 2).setBackground(Color.BLACK);
+					if (handler3.pickingUp) {guiLamps[2][22 - handler3.currentFloor] = 0;}
 				}
 				else {
-					window.getElevatorfloors(22 - handler3.currentFloor, 2).setBackground(Color.RED);
+					if (blink) {
+						window.getElevatorfloors(22 - handler3.currentFloor, 2).setBackground(Color.RED);
+					}
 				}
 				
 				// elevator 4
@@ -150,11 +169,16 @@ public class Scheduler {
 						window.getElevatorDirections((handler4.liveDirection.equals("UP") ? 0 : 1), 3).setBackground(Color.GREEN);
 					}
 					window.getElevatorfloors(22 - handler4.currentFloor, 3).setBackground(Color.BLACK);
+					if (handler4.pickingUp) {guiLamps[3][22 - handler4.currentFloor] = 0;}
 				}
 				else {
-					window.getElevatorfloors(22 - handler4.currentFloor, 3).setBackground(Color.RED);
+					if (blink) {
+						window.getElevatorfloors(22 - handler4.currentFloor, 3).setBackground(Color.RED);
+					}
 				}
+				blink = !blink;
 				/* ##     ## */
+				
 				try {
 					hostSocket.receive(rPacket);
 					System.out.println(String.format("main: received packet ( string >> %s, byte array >> %s ).\n", new String(rPacket.getData()), rPacket.getData()));
@@ -228,19 +252,23 @@ public class Scheduler {
 					
 					if (maxFS == FS1) {
 						System.out.println("SUB 1 HANDLING IT");
-						pickList1.add(temp[1] + " " + temp[2] + " " + temp[3]);			
+						pickList1.add(temp[1] + " " + temp[2] + " " + temp[3]);				// add to request List
+						guiLamps[0][22 - Integer.parseInt(temp[1])] = 1;							// update GUI
 					}
 					else if (maxFS == FS2) {
 						System.out.println("SUB 2 HANDLING IT");
 						pickList2.add(temp[1] + " " + temp[2] + " " + temp[3]);
+						guiLamps[1][22 - Integer.parseInt(temp[1])] = 1;	
 					}
 					else if (maxFS == FS3) {
 						System.out.println("SUB 3 HANDLING IT");
-						pickList3.add(temp[1] + " " + temp[2] + " " + temp[3]);				
+						pickList3.add(temp[1] + " " + temp[2] + " " + temp[3]);
+						guiLamps[2][22 - Integer.parseInt(temp[1])] = 1;	
 					}
 					else {
 						System.out.println("SUB 4 HANDLING IT");
-						pickList4.add(temp[1] + " " + temp[2] + " " + temp[3]);				
+						pickList4.add(temp[1] + " " + temp[2] + " " + temp[3]);
+						guiLamps[3][22 - Integer.parseInt(temp[1])] = 1;	
 					}				
 				}
 			}
