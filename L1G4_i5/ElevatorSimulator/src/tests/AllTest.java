@@ -12,7 +12,7 @@ public class AllTest extends TestCase {
 	public static Test suite() {
 		TestSuite suite = new TestSuite("Test fpr Elevator Simulator system"); 
 		suite.addTest(new TestSuite(FloorTest.class)); 	
-		suite.addTest(new TestSuite(SchedulerTest.class));
+		suite.addTest(new TestSuite(UtilTest.class));
 		return suite;
 	} 
 

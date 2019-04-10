@@ -41,8 +41,12 @@ public class FloorTest extends TestCase{
 	public void testFloor() {
 		int floorNo = 5;
 		int numElev = 2;
+		boolean lampUP = true;
+		boolean lampDOWN = false;
 		assertEquals(floorNo, floor.getFloorNum());
 		assertEquals(numElev, floor.getElevNum());
+		assertFalse(floor.getUpLampStatus());
+		assertFalse(floor.getDownLampStatus());
 	}
 	
 	public void TestparseInputFile() throws FileNotFoundException, IOException {
@@ -55,6 +59,12 @@ public class FloorTest extends TestCase{
 		String data = "\0" + 1 + "\0" + ins + "\0";
 		byte[] dataB = data.getBytes();
 		assertEquals(dataB, fs.createPacketData(1, "3"));
+		
+		//Testing createServiceRequest method
+		byte msg[] = new byte[100];
+		String message = "" + " " + 3 + " " + Direction.UP + " " + 5;
+		msg = fs.createPacketData(3, message);
+		assertEquals(msg, fs.createServiceRequest("", 3, 5, Direction.UP));
 	}
 	
 	
@@ -71,6 +81,7 @@ public class FloorTest extends TestCase{
 		DatagramPacket packet = new DatagramPacket(msg, msg.length);
 		DatagramSocket socket = new DatagramSocket();
 		assertEquals(packet, fs.receive(socket, msg));
+		
 	}
 	
 }
