@@ -1,6 +1,6 @@
 ~~~
 Authors: Martin Klamrowski, Angie Byun, Tashfiq Akhand, Arianna Shi, Sunjay Panesar
-Last modified: 01/04/2019
+Last modified: 10/04/2019
 ~~~
 
 ********** ITERATION 5 - L1 Group 4 **********
@@ -9,11 +9,11 @@ TEAM MEMBERS CONTRIBUTIONS:
 
 i5:
 ===
-~ Arianna Shi - 
-~ Sunjay Panesar - 
+~ Arianna Shi - RMA
+~ Sunjay Panesar - RMA
 ~ Tashfiq Akhand - GUI
-~ Martin Klamrowski - 
-~ Angie Byun - 
+~ Martin Klamrowski - GUI, code for Scheduler
+~ Angie Byun - code for Scheduler
 
 i4:
 ===
