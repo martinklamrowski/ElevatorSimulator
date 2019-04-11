@@ -3,6 +3,7 @@ import junit.framework.*;
 import tests.*;
 
 
+
 public class AllTest extends TestCase {
 	
 	public static void main(String[] args) { 

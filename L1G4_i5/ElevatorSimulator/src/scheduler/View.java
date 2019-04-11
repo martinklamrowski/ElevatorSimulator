@@ -6,18 +6,20 @@ import java.util.*;
 import javax.swing.*;
 
 public class View extends JFrame{
-	
+	//declaring instance variables
 	private JPanel panel;
 	private JTextField[][] elevatorfloors = new JTextField[22][4];
 	private JTextField[][] elevatorDirections = new JTextField[2][4];
 	private JTextField[] lamps = new JTextField[4];
 		
 	
-
+	//constructor
 	public View() {
 		panel = new JPanel();
+		//grid layout format 
 		panel.setLayout(new GridLayout(28,4,20,0));
-				
+		
+		//adding all 4 elevators into gui panel
 		JLabel E1 = new JLabel("Elevator 1");
 		panel.add(E1);
 		
@@ -30,29 +32,31 @@ public class View extends JFrame{
 		JLabel E4 = new JLabel("Elevator 4");
 		panel.add(E4);
 		
-		
+		//adding all 22 floors for each elevator
 		for (int i = 0; i<22; i++) {
 			for(int j=0; j<4; j++) {
 				elevatorfloors[i][j] = new JTextField(String.format("%d", 22 - i));
-				elevatorfloors[i][j].setBackground(Color.BLUE);
+				elevatorfloors[i][j].setBackground(Color.BLUE);//color of floors is blue
 				panel.add(elevatorfloors[i][j]);
 				elevatorfloors[i][j].setEnabled(false);
 			}
 			
 		}
+		//adding directions either UP or DOWN for each elevator
 		for (int i = 0; i<2; i++) {
 			for(int j=0; j<4; j++) {
 				if(i%2==0) {
-					elevatorDirections[i][j] = new JTextField("^");
+					elevatorDirections[i][j] = new JTextField("^");//UP symbol
 				}
 				else {
-					elevatorDirections[i][j] = new JTextField("v");
+					elevatorDirections[i][j] = new JTextField("v");//DOWN symbol
 				}
 				panel.add(elevatorDirections[i][j]);
 				elevatorDirections[i][j].setEnabled(false);
 			}
 			
 		}
+		//adding lamps for each elevator
 		for(int i = 0; i<4; i++) {
 			lamps[i] = new JTextField("Lamp");
 			panel.add(lamps[i]);
@@ -69,7 +73,7 @@ public class View extends JFrame{
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 	}
-	
+	//getter and setter functions for instance variables 
 	public JTextField getElevatorfloors(int i, int j) {
 		return elevatorfloors[i][j];
 	}

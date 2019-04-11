@@ -109,75 +109,75 @@ public class Scheduler {
 				for (int i = 0; i<22; i++) {
 					for(int j=0; j<4; j++) {						
 						if (/*blink & */guiLamps[j][i] == 1) {						
-							window.getElevatorfloors(i, j).setBackground(Color.PINK);
+							window.getElevatorfloors(i, j).setBackground(Color.PINK);//lamp on
 						}
 						else {
-							window.getElevatorfloors(i, j).setBackground(Color.BLUE);
+							window.getElevatorfloors(i, j).setBackground(Color.BLUE);//reset all floors
 						}						
 					}					
 				}
 				
 				// elevator 1
 				if (!handler1.status.equals("SUSPENDED")) {
-					window.getElevatorDirections(0, 0).setBackground(Color.WHITE);
-					window.getElevatorDirections(1, 0).setBackground(Color.WHITE);
+					window.getElevatorDirections(0, 0).setBackground(Color.WHITE);//reset UP directions
+					window.getElevatorDirections(1, 0).setBackground(Color.WHITE);//reset DOWN directions
 					if (!handler1.liveDirection.equals("")) {
 						window.getElevatorDirections((handler1.liveDirection.equals("UP") ? 0 : 1), 0).setBackground(Color.GREEN);
 					}
-					window.getElevatorfloors(22 - currentFloor1, 0).setBackground(Color.BLACK);
+					window.getElevatorfloors(22 - currentFloor1, 0).setBackground(Color.BLACK);//elevator on this floor is shown black
 					if (handler1.pickingUp) {guiLamps[0][22 - currentFloor1] = 0;}
 				}
 				else {
 					if (blink) {
-						window.getElevatorfloors(22 - currentFloor1, 0).setBackground(Color.RED);
+						window.getElevatorfloors(22 - currentFloor1, 0).setBackground(Color.RED);//elevator stuck
 					}
 				}
 				
 				// elevator 2
 				if (!handler2.status.equals("SUSPENDED")) {
-					window.getElevatorDirections(0, 1).setBackground(Color.WHITE);
-					window.getElevatorDirections(1, 1).setBackground(Color.WHITE);
+					window.getElevatorDirections(0, 1).setBackground(Color.WHITE);//reset UP directions
+					window.getElevatorDirections(1, 1).setBackground(Color.WHITE);//reset DOWN directions
 					if (!handler2.liveDirection.equals("")) {
 						window.getElevatorDirections((handler2.liveDirection.equals("UP") ? 0 : 1), 1).setBackground(Color.GREEN);
 					}
-					window.getElevatorfloors(22 - currentFloor2, 1).setBackground(Color.BLACK);
+					window.getElevatorfloors(22 - currentFloor2, 1).setBackground(Color.BLACK);//elevator on this floor is shown black
 					if (handler2.pickingUp) {guiLamps[1][22 - currentFloor2] = 0;}
 				}
 				else {
 					if (blink) {
-						window.getElevatorfloors(22 - currentFloor2, 1).setBackground(Color.RED);
+						window.getElevatorfloors(22 - currentFloor2, 1).setBackground(Color.RED);//elevator stuck
 					}
 				}
 				
 				// elevator 3
 				if (!handler3.status.equals("SUSPENDED")) {
-					window.getElevatorDirections(0, 2).setBackground(Color.WHITE);
-					window.getElevatorDirections(1, 2).setBackground(Color.WHITE);
+					window.getElevatorDirections(0, 2).setBackground(Color.WHITE);//reset UP directions
+					window.getElevatorDirections(1, 2).setBackground(Color.WHITE);//reset DOWN directions
 					if (!handler3.liveDirection.equals("")) {
 						window.getElevatorDirections((handler3.liveDirection.equals("UP") ? 0 : 1), 2).setBackground(Color.GREEN);
 					}
-					window.getElevatorfloors(22 - currentFloor3, 2).setBackground(Color.BLACK);
+					window.getElevatorfloors(22 - currentFloor3, 2).setBackground(Color.BLACK);//elevator on this floor is shown black
 					if (handler3.pickingUp) {guiLamps[2][22 - currentFloor3] = 0;}
 				}
 				else {
 					if (blink) {
-						window.getElevatorfloors(22 - currentFloor3, 2).setBackground(Color.RED);
+						window.getElevatorfloors(22 - currentFloor3, 2).setBackground(Color.RED);//elevator stuck
 					}
 				}
 				
 				// elevator 4
 				if (!handler4.status.equals("SUSPENDED")) {
-					window.getElevatorDirections(0, 3).setBackground(Color.WHITE);
-					window.getElevatorDirections(1, 3).setBackground(Color.WHITE);
+					window.getElevatorDirections(0, 3).setBackground(Color.WHITE);//reset UP directions
+					window.getElevatorDirections(1, 3).setBackground(Color.WHITE);//reset DOWN directions
 					if (!handler4.liveDirection.equals("")) {
 						window.getElevatorDirections((handler4.liveDirection.equals("UP") ? 0 : 1), 3).setBackground(Color.GREEN);
 					}
-					window.getElevatorfloors(22 - currentFloor4, 3).setBackground(Color.BLACK);
+					window.getElevatorfloors(22 - currentFloor4, 3).setBackground(Color.BLACK);//elevator on this floor is shown black
 					if (handler4.pickingUp) {guiLamps[3][22 - currentFloor4] = 0;}
 				}
 				else {
 					if (blink) {
-						window.getElevatorfloors(22 - currentFloor4, 3).setBackground(Color.RED);
+						window.getElevatorfloors(22 - currentFloor4, 3).setBackground(Color.RED);//elevator stuck
 					}
 				}
 				blink = !blink;

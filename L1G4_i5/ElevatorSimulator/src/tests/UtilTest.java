@@ -27,27 +27,16 @@ public class UtilTest extends TestCase{
 	}
 
 	//testing UtilClass
-	public void Test() throws UnknownHostException {
-		//testing parsePacket method
-		String a = "Group 4";
-		byte b[] = a.getBytes();
-		String ans[] = {"Group 4"};
-		assertEquals(ans, util.parsePacket(b));
-		
-		//testing creatPacket method
-		String data = "\0" + "1" + "\0" + "3" + "\0";
-		byte[] dataB = data.getBytes();
-		DatagramPacket packet = new DatagramPacket(data.getBytes(), data.getBytes().length, InetAddress.getLocalHost(), 8008);
-		assertEquals(packet, util.createPacket("1", "3", 8008));
-		
+	public void test() throws UnknownHostException {
 		//testing calculateSuitability method
-		assertEquals(8, util.calculateSuitability(7, 5, 5, "IDLE", "IDLE", "WORKING"));
-		assertEquals(1, util.calculateSuitability(7, 5, 6, "DOWN", "IDLE", "WORKING"));
-		assertEquals(7, util.calculateSuitability(7, 5, 3, "DOWN", "DOWN", "WORKING"));
-		assertEquals(6, util.calculateSuitability(7, 5, 3, "DOWN", "IDLE", "WORKING"));
-		assertEquals(1, util.calculateSuitability(7, 2, 1, "UP", "UP", "WORKING"));
-		assertEquals(5, util.calculateSuitability(7, 2, 5, "UP", "IDLE", "WORKING"));
-		assertEquals(6, util.calculateSuitability(7, 2, 5, "UP", "UP", "WORKING"));
+		assertEquals(1, UtilClass.calculateSuitability(7, 5, 6, "DOWN", "IDLE", "WORKING"));
+		assertEquals(7, UtilClass.calculateSuitability(7, 5, 3, "DOWN", "DOWN", "WORKING"));
+		assertEquals(6, UtilClass.calculateSuitability(7, 5, 3, "DOWN", "IDLE", "WORKING"));
+		assertEquals(1, UtilClass.calculateSuitability(7, 2, 1, "UP", "UP", "WORKING"));
+		assertEquals(5, UtilClass.calculateSuitability(7, 2, 5, "UP", "IDLE", "WORKING"));
+		assertEquals(6, UtilClass.calculateSuitability(7, 2, 5, "UP", "UP", "WORKING"));
+		assertEquals(-1, UtilClass.calculateSuitability(7, 2, 5, "UP", "UP", "SUSPENDED"));
+
 		
 	}
 	
